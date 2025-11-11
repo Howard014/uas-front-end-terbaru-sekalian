@@ -242,16 +242,37 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 1;
 }
 
+/* ==================================
+  BAGIAN YANG DIUBAH 
+==================================
+*/
+
 /* Footer */
 .footer {
-  background-color: #212529;
-  color: #f8f9fa;
+  /* Menggunakan variabel warna gelap dari root */
+  background-color: var(--manado-dark-bg, #2a2a2a); 
+  color: #f8f9fa; /* Teks terang */
   padding: 4rem 0;
 }
 
 .footer h5 {
-  color: var(--manado-gold);
   font-family: var(--font-heading);
+  color: var(--manado-gold);
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.footer .footer-brand-title {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 2rem;
+  color: var(--manado-gold);
+  margin-bottom: 1rem;
+}
+
+.footer p {
+  color: #f8f9fa; /* Pastikan paragraf juga terang */
+  line-height: 1.7;
 }
 
 .footer a {
@@ -262,6 +283,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .footer a:hover {
   color: var(--manado-gold);
+}
+
+/* Menyesuaikan warna teks copyright di footer gelap */
+.footer .text-muted {
+  color: #adb5bd !important; /* Bootstrap muted color for dark bg */
 }
 
 
