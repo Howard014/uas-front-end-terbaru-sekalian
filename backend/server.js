@@ -1,74 +1,85 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const multer = require('multer');
-const path = require('path');
-require('dotenv').config();
+// Meimo API Server 
+
+
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const multer = require("multer");
+const path = require("path");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+
 // Middleware
+
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.set('json spaces', 2);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/meimo';
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
 
-// Schemas
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error(" Error: MONGO_URI is not defined in .env file");
+  process.exit(1);
+}
+
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log(" Connected to MongoDB Atlas successfully"))
+  .catch((err) => {
+    console.error(" MongoDB connection error:", err.message);
+    console.error(" Tips: Periksa IP whitelist dan credential user di Atlas.");
+    process.exit(1);
+  });
+
+// Schemas & Models
+
+//  Menus (struktur data di MongoDB Atlas)
 const menuSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  price: { type: Number, required: true },
-  description: String,
-  imgSrc: String,
-  ratingStars: String,
-  history: String,
-  ingredients: String,
-  tips: String
+  nama: { type: String, required: true },
+  kategori: { type: String, required: true },
+  deskripsi: { type: String },
+  gambar: { type: String },
 });
 
+const Menu = mongoose.model("menus", menuSchema); //  pakai koleksi "menus"
+
+//  Comments
 const commentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   text: { type: String, required: true },
   date: { type: String, required: true },
   rating: Number,
-  menuId: mongoose.Schema.Types.ObjectId
+  menuId: mongoose.Schema.Types.ObjectId,
 });
 
-const cartSchema = new mongoose.Schema({
-  items: [{
-    name: String,
-    price: Number,
-    qty: Number
-  }],
-  total: Number,
-  createdAt: { type: Date, default: Date.now }
-});
+const Comment = mongoose.model("comments", commentSchema);
 
-// Models
-const Menu = mongoose.model('Menu', menuSchema);
-const Comment = mongoose.model('Comment', commentSchema);
-const Cart = mongoose.model('Cart', cartSchema);
-
-// Multer setup for file uploads
+// 
+// File Upload Setup
+// 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 const upload = multer({ storage });
 
-// API Routes
+// 
+// Routes
+// 
+// Root route
+app.get("/", (req, res) => {
+  res.send(" Meimo API is running!");
+});
 
-// Menu routes
-app.get('/api/menu', async (req, res) => {
+//  MENUS ROUTES 
+app.get("/api/menus", async (req, res) => {
   try {
     const menus = await Menu.find();
     res.json(menus);
@@ -77,38 +88,40 @@ app.get('/api/menu', async (req, res) => {
   }
 });
 
-app.post('/api/menu', async (req, res) => {
-  const menu = new Menu(req.body);
+app.post("/api/menus", async (req, res) => {
   try {
-    const savedMenu = await menu.save();
-    res.status(201).json(savedMenu);
+    const newMenu = new Menu(req.body);
+    const saved = await newMenu.save();
+    res.status(201).json(saved);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-app.put('/api/menu/:id', async (req, res) => {
+app.put("/api/menus/:id", async (req, res) => {
   try {
-    const updatedMenu = await Menu.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedMenu) return res.status(404).json({ message: 'Menu not found' });
-    res.json(updatedMenu);
+    const updated = await Menu.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!updated) return res.status(404).json({ message: "Menu not found" });
+    res.json(updated);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-app.delete('/api/menu/:id', async (req, res) => {
+app.delete("/api/menus/:id", async (req, res) => {
   try {
-    const deletedMenu = await Menu.findByIdAndDelete(req.params.id);
-    if (!deletedMenu) return res.status(404).json({ message: 'Menu not found' });
-    res.json({ message: 'Menu deleted' });
+    const deleted = await Menu.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Menu not found" });
+    res.json({ message: "Menu deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Comment routes
-app.get('/api/comments', async (req, res) => {
+//  COMMENTS ROUTES 
+app.get("/api/comments", async (req, res) => {
   try {
     const comments = await Comment.find().sort({ date: -1 });
     res.json(comments);
@@ -117,48 +130,25 @@ app.get('/api/comments', async (req, res) => {
   }
 });
 
-app.post('/api/comments', async (req, res) => {
-  const comment = new Comment(req.body);
+app.post("/api/comments", async (req, res) => {
   try {
-    const savedComment = await comment.save();
-    res.status(201).json(savedComment);
+    const saved = await new Comment(req.body).save();
+    res.status(201).json(saved);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// Cart routes
-app.post('/api/cart', async (req, res) => {
-  const cart = new Cart(req.body);
-  try {
-    const savedCart = await cart.save();
-    res.status(201).json(savedCart);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-app.get('/api/cart', async (req, res) => {
-  try {
-    const carts = await Cart.find().sort({ createdAt: -1 });
-    res.json(carts);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// Upload route
-app.post('/upload', upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
+//  UPLOAD ROUTE 
+app.post("/upload", upload.single("image"), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
   res.json({
-    message: 'Upload success',
-    filePath: '/uploads/' + req.file.filename
+    message: " Upload success",
+    filePath: "/uploads/" + req.file.filename,
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+// Start Server
+
+app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
