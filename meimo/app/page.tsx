@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useState, useEffect, FormEvent } from "react";
-// useRouter tidak lagi digunakan untuk tombol ini, tapi mungkin masih berguna untuk navigasi lain
-import { useRouter } from "next/navigation"; 
+import Link from "next/link"; // <--- Tambahkan baris ini
+import { useRouter } from "next/navigation";
 import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap
-import { url } from "inspector";
+import { url } from "inspector";    
 
 // 🎨 Daftar gambar untuk slideshow header (tetap pakai file gambar lokal)
 const backgroundImages = [
@@ -21,8 +21,12 @@ interface Comment {
   rating?: number;
 }
 
+// =======================================================
+// 1. INTERFACE DIPERBARUI (MENERIMA _id DAN price WAJIB)
+// =======================================================
 interface MenuItem {
-  id?: number;
+  id?: number; // ID untuk fallback lokal
+  _id?: string; // ID dari database (backend)
   name: string;
   imgSrc: string;
   ratingStars: string;
@@ -30,7 +34,9 @@ interface MenuItem {
   history: string;
   ingredients?: string;
   tips?: string;
-  price?: number;
+  price: number; // Menjadi 'required' (wajib ada)
+  cost?: number; // Data baru dari admin
+  stock?: number; // Data baru dari admin
 }
 
 // 🍽 Data Menu - fallback lokal (TIDAK MENGHAPUS / MEMBUAT BARU)
@@ -140,10 +146,10 @@ export default function Home() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredMenu, setFilteredMenu] = useState<MenuItem[]>(menuData);
+  const [filteredMenu, setFilteredMenu] = useState<MenuItem[]>([]); // Mulai kosong, tunggu fetch
   const [isScrolled, setIsScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [loadingMenu, setLoadingMenu] = useState<boolean>(false);
+  const [loadingMenu, setLoadingMenu] = useState<boolean>(true); // Set true di awal
 
   // Slideshow
   useEffect(() => {
@@ -171,7 +177,7 @@ export default function Home() {
     async function fetchMenu() {
       setLoadingMenu(true);
       try {
-        const res = await fetch("http://localhost:5000/api/menu");
+        const res = await fetch("http://localhost:5000/api/menus");
         if (!mounted) return;
         if (res.ok) {
           const data: MenuItem[] = await res.json();
@@ -182,13 +188,16 @@ export default function Home() {
             return;
           }
         }
-        // fallback
+        // fallback jika res tidak ok atau data kosong
         setFilteredMenu(menuData);
       } catch (err) {
         // network error atau endpoint tidak ada -> tetap gunakan lokal
+        console.error("Gagal fetch menu dari backend, menggunakan data lokal.");
         setFilteredMenu(menuData);
       } finally {
-        setLoadingMenu(false);
+        if (mounted) {
+          setLoadingMenu(false);
+        }
       }
     }
     fetchMenu();
@@ -208,15 +217,21 @@ export default function Home() {
   }, []);
 
   // Search handler (client-side)
+  // Perbaiki agar search menggunakan data yang sudah di-fetch (filteredMenu) atau menuData jika fetch gagal
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const q = searchQuery.trim().toLowerCase();
+    
+    // Tentukan sumber data: filteredMenu jika ada isinya, jika tidak, menuData
+    const sourceData = filteredMenu.length > 0 ? filteredMenu : menuData;
+
     if (q === "") {
-      setFilteredMenu((prev) => (prev.length ? prev : menuData));
+      setFilteredMenu(sourceData); // Kembalikan ke daftar penuh
       return;
     }
-    setFilteredMenu((prev) =>
-      (prev.length ? prev : menuData).filter(
+    
+    setFilteredMenu(
+      sourceData.filter(
         (m) =>
           m.name.toLowerCase().includes(q) ||
           m.description.toLowerCase().includes(q) ||
@@ -224,6 +239,7 @@ export default function Home() {
       )
     );
   };
+
 
   // Komentar submit -> saat nanti ingin dihubungkan ke backend, ubah POST ke /api/comments
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -273,40 +289,88 @@ export default function Home() {
     setRating(0);
   };
 
-  // Keranjang: simpan di localStorage + POST ke /api/cart bila tersedia
+  // =======================================================
+  // 2. FUNGSI addToCart DIPERBARUI
+  // (Menangani _id, id, dan logika pengurangan qty)
+  // =======================================================
   const addToCart = async (item: MenuItem, qty = 1) => {
     const key = "meimo_cart";
     const raw = localStorage.getItem(key);
-    const cart: { id?: number; name: string; price?: number; qty: number }[] =
-      raw ? JSON.parse(raw) : [];
 
-    const exist = cart.find((c) => c.id === item.id && c.name === item.name);
+    // 1. Tentukan ID unik (prioritaskan _id dari backend)
+    const uniqueId = item._id ?? item.id;
+    const isBackendItem = !!item._id; // Tandai jika ini item dari database
+
+    // 2. Update struktur cart di localStorage agar bisa menyimpan _id
+    const cart: {
+      id?: number; // ID lokal
+      _id?: string; // ID backend
+      name: string;
+      price: number;
+      qty: number;
+    }[] = raw ? JSON.parse(raw) : [];
+
+    // 3. Cari item di keranjang berdasarkan ID yang benar
+    let exist;
+    if (isBackendItem) {
+      // Jika item dari backend, cari berdasarkan _id
+      exist = cart.find((c) => c._id === uniqueId);
+    } else {
+      // Jika item lokal, cari berdasarkan id (dan pastikan bukan item backend)
+      exist = cart.find((c) => c.id === uniqueId && !c._id);
+    }
+
     if (exist) {
       exist.qty += qty;
-    } else {
-      cart.push({ id: item.id, name: item.name, price: item.price, qty });
+    } else if (qty > 0) {
+      // 4. Tambahkan item baru hanya jika qty > 0 (bukan dari tombol minus)
+      cart.push({
+        id: isBackendItem ? undefined : item.id, // Hanya simpan id jika item lokal
+        _id: item._id, // Simpan _id jika item backend
+        name: item.name,
+        price: item.price, // price sudah required
+        qty,
+      });
     }
-    localStorage.setItem(key, JSON.stringify(cart));
 
-    // coba sync ke backend cart
+    // 5. Filter item yang kuantitasnya 0 atau kurang (hasil dari tombol -)
+    const finalCart = cart.filter((c) => c.qty > 0);
+    localStorage.setItem(key, JSON.stringify(finalCart));
+
+    // 6. Coba sync ke backend cart dengan data yang sudah benar
     try {
       await fetch("http://localhost:5000/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cart),
+        body: JSON.stringify(finalCart), // Kirim cart yang sudah difilter
       });
     } catch (err) {
       // tidak fatal; tetap gunakan local cart
     }
 
-    alert(`${item.name} ditambahkan ke keranjang.`);
+    // 7. Beri notifikasi yang sesuai
+    if (qty > 0) {
+      alert(`${item.name} ditambahkan ke keranjang.`);
+    } else {
+      // Cek apakah item masih ada di keranjang setelah pengurangan
+      const itemStillInCart = finalCart.some(c => 
+        isBackendItem ? c._id === uniqueId : c.id === uniqueId
+      );
+      
+      if (itemStillInCart) {
+        alert(`${item.name} dikurangi dari keranjang.`);
+      } else {
+        alert(`${item.name} dihapus dari keranjang.`);
+      }
+    }
   };
+
 
   // Fungsi goToOrderPage() dihapus karena tidak lagi digunakan oleh tombol navbar
 
   return (
     <div>
-      {/* ========== NAVBAR ========== */}
+{/* ========== NAVBAR ========== */}
       <nav
         className={`navbar navbar-expand-lg navbar-dark fixed-top px-4 ${
           isScrolled ? "scrolled" : ""
@@ -315,21 +379,19 @@ export default function Home() {
         <div className="container-fluid">
           {/* Tombol Dine In / Pesan (DIUBAH) */}
           <div className="d-flex align-items-center ms-auto gap-2">
-            {/* Mengubah <button> menjadi <a> (link) ke WhatsApp */}
-            <a
-              href="https://wa.me/6281234567890?text=Halo%2C%20saya%20ingin%20memesan%20dari%20Meimo."
-              target="_blank"
-              rel="noopener noreferrer"
+            
+            {/* Ganti <a> menjadi <Link> seperti di bawah ini: */}
+            <Link
+              href="/order"  // <--- Arahkan ke halaman /order
               className="btn btn-warning fw-bold px-4 py-2"
               style={{ borderRadius: "25px" }}
-              role="button" // Menambahkan role button untuk aksesibilitas
             >
               🍽 Dine In / Pesan
-            </a>
+            </Link>
+
           </div>
         </div>
       </nav>
-
       {/* ========== HERO ========== */}
       <header className="hero-section">
         <div className="hero-slideshow">
@@ -416,9 +478,13 @@ export default function Home() {
           <p>Klik gambar untuk melihat detail, sejarah, dan resepnya.</p>
         </div>
         <div className="horizontal-scroll-wrapper">
+          {/* Tampilkan data fallback jika loading, ATAU tampilkan filteredMenu jika sudah selesai */}
           {(loadingMenu ? menuData : filteredMenu).map((menu) => (
             <div
-              key={menu.name + (menu.id ?? menu.name)}
+              // =======================================================
+              // 3. KEY DIPERBARUI (Prioritaskan _id)
+              // =======================================================
+              key={menu._id ?? menu.id ?? menu.name}
               className="scroll-card-item"
               onClick={() => handleShowModal(menu)}
             >
@@ -440,14 +506,15 @@ export default function Home() {
                   </p>
                   <div className="d-flex justify-content-between align-items-center mt-3">
                     <small className="text-muted">
-                      Rp {menu.price ? menu.price.toLocaleString() : "-"}
+                      {/* Harga (karena price 'required', tidak perlu cek) */}
+                      Rp {menu.price.toLocaleString()}
                     </small>
                     <div className="d-flex gap-2">
                       <button
                         className="btn btn-sm btn-outline-light"
                         onClick={(e) => {
                           e.stopPropagation();
-                          addToCart(menu, -1); // jika -1 dan belum ada, tidak mengurangi di addToCart
+                          addToCart(menu, -1); // Logika -1 sekarang ditangani
                         }}
                       >
                         −
