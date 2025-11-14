@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -7,6 +7,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 interface MenuItem {
   _id?: string;
   name: string;
+  category: string;
   price: number;
   cost: number;
   stock: number;
@@ -32,6 +33,32 @@ interface Order {
   createdAt: string;
 }
 
+interface RawMenuItem {
+  _id?: string;
+  name?: string;
+  category?: string;
+  price?: string | number;
+  cost?: string | number;
+  stock?: string | number;
+  description?: string;
+  imgSrc?: string;
+  ratingStars?: string;
+  history?: string;
+  ingredients?: string;
+  tips?: string;
+  // Alternative property names
+  nama?: string;
+  kategori?: string;
+  harga?: string | number;
+  biaya?: string | number;
+  stok?: string | number;
+  deskripsi?: string;
+  gambar?: string;
+  rating?: string;
+  sejarah?: string;
+  bahan?: string;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"menu" | "orders">("menu");
@@ -50,13 +77,27 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       const [menuRes, orderRes] = await Promise.all([
-        fetch("http://localhost:5000/api/menu"),
+        fetch("http://localhost:5000/api/menus"),
         fetch("http://localhost:5000/api/orders"),
       ]);
 
       if (menuRes.ok) {
         const menuData = await menuRes.json();
-        setMenus(menuData);
+        const parsedMenuData = menuData.map((menu: RawMenuItem, index: number) => ({
+          _id: menu._id,
+          name: menu.name || menu.nama,
+          category: menu.category || menu.kategori,
+          price: menu.price != null ? parseFloat(menu.price.toString()) : menu.harga != null ? parseFloat(menu.harga.toString()) : (25000 + index * 5000), // Dummy price if not provided
+          cost: menu.cost != null ? parseFloat(menu.cost.toString()) : menu.biaya != null ? parseFloat(menu.biaya.toString()) : 0,
+          stock: menu.stock != null ? parseInt(menu.stock.toString()) : menu.stok != null ? parseInt(menu.stok.toString()) : 100,
+          description: menu.description || menu.deskripsi,
+          imgSrc: menu.imgSrc || menu.gambar,
+          ratingStars: menu.ratingStars || menu.rating,
+          history: menu.history || menu.sejarah,
+          ingredients: menu.ingredients || menu.bahan,
+          tips: menu.tips,
+        }));
+        setMenus(parsedMenuData);
       }
 
       if (orderRes.ok) {
@@ -111,7 +152,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error("Gagal membuat order");
 
       // Kurangi stock
-      await fetch(http://localhost:5000/api/menu/${menuId}, {
+      await fetch(`http://localhost:5000/api/menus/${menuId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...menu, stock: menu.stock - qty }),
@@ -129,8 +170,8 @@ export default function AdminDashboard() {
     try {
       const method = menu._id ? "PUT" : "POST";
       const url = menu._id
-        ? http://localhost:5000/api/menu/${menu._id}
-        : "http://localhost:5000/api/menu";
+        ? `http://localhost:5000/api/menus/${menu._id}`
+        : "http://localhost:5000/api/menus";
 
       const res = await fetch(url, {
         method,
@@ -153,7 +194,7 @@ export default function AdminDashboard() {
     if (!confirm("Are you sure you want to delete this menu item?")) return;
 
     try {
-      const res = await fetch(http://localhost:5000/api/menu/${id}, {
+      const res = await fetch(`http://localhost:5000/api/menus/${id}`, {
         method: "DELETE",
       });
       if (res.ok) fetchData();
@@ -165,7 +206,7 @@ export default function AdminDashboard() {
   // Complete Order
   const handleCompleteOrder = async (orderId: string) => {
     try {
-      const res = await fetch(http://localhost:5000/api/orders/${orderId}, {
+      const res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "completed" }),
@@ -243,7 +284,7 @@ export default function AdminDashboard() {
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
             <button
-              className={nav-link ${activeTab === "menu" ? "active" : ""}}
+              className={`nav-link ${activeTab === "menu" ? "active" : ""}`}
               onClick={() => setActiveTab("menu")}
             >
               Menu Management
@@ -252,7 +293,7 @@ export default function AdminDashboard() {
 
           <li className="nav-item">
             <button
-              className={nav-link ${activeTab === "orders" ? "active" : ""}}
+              className={`nav-link ${activeTab === "orders" ? "active" : ""}`}
               onClick={() => setActiveTab("orders")}
             >
               Order Management
@@ -270,6 +311,7 @@ export default function AdminDashboard() {
                 onClick={() => {
                   setEditingMenu({
                     name: "",
+                    category: "",
                     price: 0,
                     cost: 0,
                     stock: 0,
@@ -292,9 +334,10 @@ export default function AdminDashboard() {
                 <thead>
                   <tr>
                     <th>Name</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Image</th>
                     <th>Price</th>
-                    <th>Cost</th>
-                    <th>Stock</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -302,9 +345,23 @@ export default function AdminDashboard() {
                   {menus.map((menu) => (
                     <tr key={menu._id}>
                       <td>{menu.name}</td>
+                      <td>{menu.category}</td>
+                      <td>{menu.description}</td>
+                      <td>
+                        {menu.imgSrc && (
+                          <img
+                            src={menu.imgSrc}
+                            alt={menu.name}
+                            style={{
+                              width: "50px",
+                              height: "50px",
+                              objectFit: "cover",
+                              borderRadius: "4px"
+                            }}
+                          />
+                        )}
+                      </td>
                       <td>Rp {menu.price.toLocaleString()}</td>
-                      <td>Rp {menu.cost.toLocaleString()}</td>
-                      <td>{menu.stock}</td>
                       <td>
                         <button
                           className="btn btn-sm btn-outline-primary me-2"
@@ -443,6 +500,24 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="col-md-6 mb-3">
+                        <label className="form-label">Category</label>
+                        <select
+                          className="form-control"
+                          value={editingMenu.category}
+                          onChange={(e) =>
+                            setEditingMenu({ ...editingMenu, category: e.target.value })
+                          }
+                          required
+                        >
+                          <option value="">Select Category</option>
+                          <option value="Sarapan">Sarapan</option>
+                          <option value="Utama">Utama</option>
+                          <option value="Lauk">Lauk</option>
+                          <option value="Camilan">Camilan</option>
+                        </select>
+                      </div>
+
+                      <div className="col-md-6 mb-3">
                         <label className="form-label">Price</label>
                         <input
                           type="number"
@@ -455,36 +530,6 @@ export default function AdminDashboard() {
                             })
                           }
                           required
-                        />
-                      </div>
-
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Cost</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={editingMenu.cost}
-                          onChange={(e) =>
-                            setEditingMenu({
-                              ...editingMenu,
-                              cost: parseInt(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Stock</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={editingMenu.stock}
-                          onChange={(e) =>
-                            setEditingMenu({
-                              ...editingMenu,
-                              stock: parseInt(e.target.value) || 0,
-                            })
-                          }
                         />
                       </div>
 
@@ -535,55 +580,6 @@ export default function AdminDashboard() {
                           />
                         </div>
                       )}
-
-
-                      {/* Data lain yang ada di interface tapi tidak di form, bisa ditambahkan di sini */}
-                      {/* Misalnya: ratingStars, history, ingredients, tips */}
-                      
-                      <div className="col-12 mb-3">
-                        <label className="form-label">Rating (Contoh: ★★★★☆)</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={editingMenu.ratingStars}
-                          onChange={(e) =>
-                            setEditingMenu({ ... editingMenu, ratingStars: e.target.value })
-                          }
-                        />
-                      </div>
-                      
-                      <div className="col-12 mb-3">
-                        <label className="form-label">History</label>
-                        <textarea
-                          className="form-control"
-                          value={editingMenu.history}
-                          onChange={(e) =>
-                            setEditingMenu({ ...editingMenu, history: e.target.value })
-                          }
-                        />
-                      </div>
-
-                       <div className="col-12 mb-3">
-                        <label className="form-label">Ingredients</label>
-                        <textarea
-                          className="form-control"
-                          value={editingMenu.ingredients}
-                          onChange={(e) =>
-                            setEditingMenu({ ...editingMenu, ingredients: e.target.value })
-                          }
-                        />
-                      </div>
-
-                       <div className="col-12 mb-3">
-                        <label className="form-label">Tips</label>
-                        <textarea
-                          className="form-control"
-                          value={editingMenu.tips}
-                          onChange={(e) =>
-                            setEditingMenu({ ...editingMenu, tips: e.target.value })
-                          }
-                        />
-                      </div>
 
                     </div>
 
