@@ -1,18 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect, FormEvent } from "react";
-import Link from "next/link"; // <--- Tambahkan baris ini
 import { useRouter } from "next/navigation";
-import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap
-import { url } from "inspector";    
-
-// 🎨 Daftar gambar untuk slideshow header (tetap pakai file gambar lokal)
-const backgroundImages = [
-  "/images/background/meimo1.jpg",
-  "/images/background/meimo2.jpg",
-  "/images/background/meimo.jpg",
-];
+import { mockBackgrounds, mockMenus } from "@/lib/mockData";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 interface Comment {
   name: string;
@@ -21,119 +12,28 @@ interface Comment {
   rating?: number;
 }
 
-// =======================================================
-// 1. INTERFACE DIPERBARUI (MENERIMA _id DAN price WAJIB)
-// =======================================================
 interface MenuItem {
-  id?: number; // ID untuk fallback lokal
-  _id?: string; // ID dari database (backend)
+  _id?: string;
+  id?: number;
   name: string;
+  nama?: string;
   imgSrc: string;
-  ratingStars: string;
+  gambar?: string;
+  ratingStars?: string;
   description: string;
-  history: string;
+  deskripsi?: string;
+  history?: string;
+  kategori?: string;
   ingredients?: string;
   tips?: string;
-  price: number; // Menjadi 'required' (wajib ada)
-  cost?: number; // Data baru dari admin
-  stock?: number; // Data baru dari admin
+  price?: number;
 }
 
-// 🍽 Data Menu - fallback lokal (TIDAK MENGHAPUS / MEMBUAT BARU)
-const menuData: MenuItem[] = [
-  {
-    id: 1,
-    name: "Babi Kecap",
-    imgSrc: "/images/menu/babikecap.jpg",
-    ratingStars: "★★★★☆",
-    description:
-      "Irisan daging babi dimasak dengan kecap khas Manado yang gurih dan manis. Perpaduan sempurna antara manis, asin, dan sedikit pedas.",
-    history:
-      "Masakan ini merupakan salah satu sajian tradisional yang sering hadir dalam acara keluarga Manado. Dipengaruhi oleh budaya Tionghoa yang berbaur dengan cita rasa lokal.",
-    ingredients:
-      "Daging babi, kecap manis, bawang bombay, cabai rawit, jahe, bawang putih",
-    tips: "Gunakan daging babi bagian has dalam agar lebih empuk dan cepat matang.",
-    price: 45000,
-  },
-  {
-    id: 2,
-    name: "Babi Panggang",
-    imgSrc: "/images/menu/babipanggang.jpg",
-    ratingStars: "★★★★☆",
-    description:
-      "Daging babi yang dipanggang dengan bumbu rempah khas, menghasilkan kulit yang renyah dan daging yang juicy.",
-    history:
-      "Sering disajikan dalam perayaan dan pesta adat sebagai hidangan utama. Teknik memanggang ini telah diwariskan turun-temurun.",
-    ingredients: "Daging babi, bumbu rica, jeruk nipis, daun jeruk, serai",
-    tips: "Marinasi minimal 2 jam agar bumbu meresap sempurna.",
-    price: 50000,
-  },
-  {
-    id: 3,
-    name: "Tinoransak",
-    imgSrc: "/images/menu/tinorangsak.jpg",
-    ratingStars: "★★★★★",
-    description:
-      "Daging babi yang dimasak di dalam bambu dengan bumbu pedas khas Manado.",
-    history:
-      "Metode memasak di bambu adalah warisan kuliner kuno Minahasa yang masih dilestarikan hingga kini.",
-    ingredients: "Daging babi, bumbu rica merah, daun bawang, tomat, bambu muda",
-    tips: "Pilih bambu yang masih muda dan segar untuk hasil terbaik.",
-    price: 55000,
-  },
-  {
-    id: 4,
-    name: "Cakalang Suwir",
-    imgSrc: "/images/menu/cakalangsuir.jpg",
-    ratingStars: "★★★★★",
-    description:
-      "Ikan cakalang asap yang disuwir dan dimasak dengan bumbu rica-rica yang pedas.",
-    history:
-      "Cakalang adalah ikan utama dalam kuliner Manado karena hasil laut yang melimpah.",
-    ingredients: "Ikan cakalang asap, cabai merah keriting, tomat, daun kemangi",
-    tips: "Cakalang asap yang bagus berwarna keemasan dan tidak terlalu kering.",
-    price: 35000,
-  },
-  {
-    id: 5,
-    name: "Kangkung Bunga Pepaya",
-    imgSrc: "/images/menu/kangkungpepaya.jpg",
-    ratingStars: "★★★★☆",
-    description:
-      "Tumis kangkung dan bunga pepaya dengan cita rasa sedikit pahit namun nikmat.",
-    history:
-      "Sayuran pendamping yang wajib ada untuk menyeimbangkan rasa pedas masakan utama.",
-    ingredients: "Kangkung, bunga pepaya muda, bawang putih, terasi, cabai rawit",
-    tips: "Rendam bunga pepaya dalam air garam untuk mengurangi rasa pahit.",
-    price: 20000,
-  },
-  {
-    id: 6,
-    name: "Goroho Manado",
-    imgSrc: "/images/menu/gorohomanado.jpg",
-    ratingStars: "★★★★☆",
-    description:
-      "Pisang goroho (pisang mengkal) yang digoreng tipis dan disajikan dengan sambal roa.",
-    history:
-      "Camilan khas yang menunjukkan kekayaan hasil bumi Manado. Pisang goroho hanya tumbuh di Sulawesi Utara.",
-    ingredients: "Pisang goroho, minyak goreng, sambal roa, garam",
-    tips: "Pilih pisang yang masih mengkal agar tidak terlalu manis saat digoreng.",
-    price: 18000,
-  },
-  {
-    id: 7,
-    name: "Perkedel Jagung",
-    imgSrc: "/images/menu/perkedeljagung.jpg",
-    ratingStars: "★★★★☆",
-    description:
-      "Bakwan jagung khas Manado yang renyah di luar dan manis di dalam.",
-    history:
-      "Juga dikenal sebagai 'Nike', sering dimakan sebagai lauk atau camilan.",
-    ingredients: "Jagung manis, tepung terigu, telur, daun bawang, bawang putih",
-    tips: "Gunakan jagung manis yang masih segar untuk hasil paling manis.",
-    price: 12000,
-  },
-];
+interface Background {
+  _id: string;
+  nama: string;
+  url: string;
+}
 
 export default function Home() {
   const router = useRouter();
@@ -146,67 +46,72 @@ export default function Home() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredMenu, setFilteredMenu] = useState<MenuItem[]>([]); // Mulai kosong, tunggu fetch
+  const [filteredMenu, setFilteredMenu] = useState<MenuItem[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [loadingMenu, setLoadingMenu] = useState<boolean>(true); // Set true di awal
+  const [loadingMenu, setLoadingMenu] = useState<boolean>(false);
+  const [backgrounds, setBackgrounds] = useState<Background[]>([]);
 
-  // Slideshow
+  //  Ambil gambar background & menu dari backend atau gunakan mock data
   useEffect(() => {
+    async function fetchData() {
+      try {
+        const [bgRes, menuRes] = await Promise.all([
+          fetch("http://localhost:5000/api/backgrounds"),
+          fetch("http://localhost:5000/api/menus"),
+        ]);
+
+        if (!bgRes.ok || !menuRes.ok) throw new Error("API response not ok");
+
+        const [bgData, menuData] = await Promise.all([
+          bgRes.json(),
+          menuRes.json(),
+        ]);
+
+        if (Array.isArray(bgData)) setBackgrounds(bgData);
+        if (Array.isArray(menuData))
+          setFilteredMenu(
+            menuData.map((m: any) => ({
+              ...m,
+              name: m.nama || m.name,
+              description: m.deskripsi || m.description || "",
+              imgSrc: m.gambar || "",
+              ratingStars: "★★★★☆",
+              price: m.price || m.harga || 0,
+            }))
+          );
+      } catch (err) {
+        console.warn("⚠️ API not available, using mock data:", err);
+        // Gunakan mock data jika API tidak tersedia
+        setBackgrounds(mockBackgrounds);
+        setFilteredMenu(
+          mockMenus.map((m) => ({
+            ...m,
+            name: m.nama,
+            description: m.deskripsi || "",
+            imgSrc: m.gambar || "",
+            ratingStars: "★★★★☆",
+            price: m.harga || 0,
+          }))
+        );
+      } finally {
+        setLoadingMenu(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Slideshow background auto ganti tiap 5 detik
+  useEffect(() => {
+    if (backgrounds.length === 0) return;
     const timer = setInterval(
-      () => setCurrentBgIndex((prev) => (prev + 1) % backgroundImages.length),
+      () => setCurrentBgIndex((prev) => (prev + 1) % backgrounds.length),
       5000
     );
     return () => clearInterval(timer);
-  }, []);
+  }, [backgrounds]);
 
-  // Load comments dari localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("meimo_comments");
-    if (stored) setComments(JSON.parse(stored));
-  }, []);
-
-  useEffect(() => {
-    if (comments.length > 0)
-      localStorage.setItem("meimo_comments", JSON.stringify(comments));
-  }, [comments]);
-
-  // Load menu dari backend jika tersedia; fallback ke menuData lokal
-  useEffect(() => {
-    let mounted = true;
-    async function fetchMenu() {
-      setLoadingMenu(true);
-      try {
-        const res = await fetch("http://localhost:5000/api/menus");
-        if (!mounted) return;
-        if (res.ok) {
-          const data: MenuItem[] = await res.json();
-          // jika backend mengembalikan array, gunakan itu; jika tidak, tetap fallback
-          if (Array.isArray(data) && data.length > 0) {
-            setFilteredMenu(data);
-            setLoadingMenu(false);
-            return;
-          }
-        }
-        // fallback jika res tidak ok atau data kosong
-        setFilteredMenu(menuData);
-      } catch (err) {
-        // network error atau endpoint tidak ada -> tetap gunakan lokal
-        console.error("Gagal fetch menu dari backend, menggunakan data lokal.");
-        setFilteredMenu(menuData);
-      } finally {
-        if (mounted) {
-          setLoadingMenu(false);
-        }
-      }
-    }
-    fetchMenu();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Scroll effects
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -216,22 +121,23 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Search handler (client-side)
-  // Perbaiki agar search menggunakan data yang sudah di-fetch (filteredMenu) atau menuData jika fetch gagal
+  // Load & simpan komentar lokal
+  useEffect(() => {
+    const stored = localStorage.getItem("meimo_comments");
+    if (stored) setComments(JSON.parse(stored));
+  }, []);
+  useEffect(() => {
+    if (comments.length > 0)
+      localStorage.setItem("meimo_comments", JSON.stringify(comments));
+  }, [comments]);
+
+  //  Pencarian menu
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const q = searchQuery.trim().toLowerCase();
-    
-    // Tentukan sumber data: filteredMenu jika ada isinya, jika tidak, menuData
-    const sourceData = filteredMenu.length > 0 ? filteredMenu : menuData;
-
-    if (q === "") {
-      setFilteredMenu(sourceData); // Kembalikan ke daftar penuh
-      return;
-    }
-    
-    setFilteredMenu(
-      sourceData.filter(
+    if (q === "") return;
+    setFilteredMenu((prev) =>
+      prev.filter(
         (m) =>
           m.name.toLowerCase().includes(q) ||
           m.description.toLowerCase().includes(q) ||
@@ -240,8 +146,7 @@ export default function Home() {
     );
   };
 
-
-  // Komentar submit -> saat nanti ingin dihubungkan ke backend, ubah POST ke /api/comments
+  //  Komentar
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -251,285 +156,115 @@ export default function Home() {
       form
         .querySelector<HTMLTextAreaElement>("#isi-komentar")
         ?.value.trim() || "";
-
     if (!text) return alert("Komentar tidak boleh kosong!");
     if (rating === 0) return alert("Silakan berikan rating terlebih dahulu!");
-
     const newComment: Comment = {
       name,
       text,
       date: new Date().toLocaleString("id-ID"),
       rating,
     };
-
-    // simpan lokal
     setComments((prev) => [newComment, ...prev]);
-
-    // coba kirim ke backend (opsional, jika endpoint ada)
-    (async () => {
-      try {
-        await fetch("http://localhost:5000/api/comments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newComment),
-        });
-      } catch (err) {
-        // ignore; tetap gunakan localStorage
-      }
-    })();
-
     form.reset();
     setRating(0);
   };
 
-  // Modal show
-  const handleShowModal = (menu: MenuItem) => {
-    setSelectedMenu(menu);
-    setShowModal(true);
-    setRating(0);
-  };
-
-  // =======================================================
-  // 2. FUNGSI addToCart DIPERBARUI
-  // (Menangani _id, id, dan logika pengurangan qty)
-  // =======================================================
+  //  Tambah ke keranjang
   const addToCart = async (item: MenuItem, qty = 1) => {
     const key = "meimo_cart";
     const raw = localStorage.getItem(key);
+    const cart: { id?: number; name: string; price?: number; qty: number }[] =
+      raw ? JSON.parse(raw) : [];
 
-    // 1. Tentukan ID unik (prioritaskan _id dari backend)
-    const uniqueId = item._id ?? item.id;
-    const isBackendItem = !!item._id; // Tandai jika ini item dari database
+    const exist = cart.find((c) => c.id === item.id && c.name === item.name);
+    if (exist) exist.qty += qty;
+    else cart.push({ id: item.id, name: item.name, price: item.price, qty });
 
-    // 2. Update struktur cart di localStorage agar bisa menyimpan _id
-    const cart: {
-      id?: number; // ID lokal
-      _id?: string; // ID backend
-      name: string;
-      price: number;
-      qty: number;
-    }[] = raw ? JSON.parse(raw) : [];
-
-    // 3. Cari item di keranjang berdasarkan ID yang benar
-    let exist;
-    if (isBackendItem) {
-      // Jika item dari backend, cari berdasarkan _id
-      exist = cart.find((c) => c._id === uniqueId);
-    } else {
-      // Jika item lokal, cari berdasarkan id (dan pastikan bukan item backend)
-      exist = cart.find((c) => c.id === uniqueId && !c._id);
-    }
-
-    if (exist) {
-      exist.qty += qty;
-    } else if (qty > 0) {
-      // 4. Tambahkan item baru hanya jika qty > 0 (bukan dari tombol minus)
-      cart.push({
-        id: isBackendItem ? undefined : item.id, // Hanya simpan id jika item lokal
-        _id: item._id, // Simpan _id jika item backend
-        name: item.name,
-        price: item.price, // price sudah required
-        qty,
-      });
-    }
-
-    // 5. Filter item yang kuantitasnya 0 atau kurang (hasil dari tombol -)
-    const finalCart = cart.filter((c) => c.qty > 0);
-    localStorage.setItem(key, JSON.stringify(finalCart));
-
-    // 6. Coba sync ke backend cart dengan data yang sudah benar
-    try {
-      await fetch("http://localhost:5000/api/cart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalCart), // Kirim cart yang sudah difilter
-      });
-    } catch (err) {
-      // tidak fatal; tetap gunakan local cart
-    }
-
-    // 7. Beri notifikasi yang sesuai
-    if (qty > 0) {
-      alert(`${item.name} ditambahkan ke keranjang.`);
-    } else {
-      // Cek apakah item masih ada di keranjang setelah pengurangan
-      const itemStillInCart = finalCart.some(c => 
-        isBackendItem ? c._id === uniqueId : c.id === uniqueId
-      );
-      
-      if (itemStillInCart) {
-        alert(`${item.name} dikurangi dari keranjang.`);
-      } else {
-        alert(`${item.name} dihapus dari keranjang.`);
-      }
-    }
+    localStorage.setItem(key, JSON.stringify(cart));
+    alert(`${item.name} ditambahkan ke keranjang.`);
   };
 
-
-  // Fungsi goToOrderPage() dihapus karena tidak lagi digunakan oleh tombol navbar
+  
+  const bgUrl =
+    backgrounds.length > 0
+      ? backgrounds[currentBgIndex].url
+      : "/images/background/default.jpg";
 
   return (
     <div>
-{/* ========== NAVBAR ========== */}
+      {/*  NAVBAR  */}
       <nav
         className={`navbar navbar-expand-lg navbar-dark fixed-top px-4 ${
           isScrolled ? "scrolled" : ""
         }`}
       >
         <div className="container-fluid">
-          {/* Tombol Dine In / Pesan (DIUBAH) */}
           <div className="d-flex align-items-center ms-auto gap-2">
-            
-            {/* Ganti <a> menjadi <Link> seperti di bawah ini: */}
-            <Link
-              href="/order"  // <--- Arahkan ke halaman /order
+            <a
+              href="https://wa.me/6281234567890?text=Halo%2C%20saya%20ingin%20memesan%20dari%20Meimo."
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn btn-warning fw-bold px-4 py-2"
               style={{ borderRadius: "25px" }}
             >
-              🍽 Dine In / Pesan
-            </Link>
-
+               Dine In / Pesan
+            </a>
           </div>
         </div>
       </nav>
-      {/* ========== HERO ========== */}
-      <header className="hero-section">
-        <div className="hero-slideshow">
-          {backgroundImages.map((img, i) => (
-            <div
-              key={img}
-              className="hero-slide"
-              style={{
-                backgroundImage: `url(${img})`,
-                opacity: i === currentBgIndex ? 1 : 0,
-              }}
-            />
-          ))}
-        </div>
 
-        <div className="hero-content">
-          <span className="script-text">Rasa</span>
-          <h1>MANADO</h1>
-          <p className="lead fs-4">
-            Jelajahi cita rasa khas Manado dan kisah di baliknya.
-          </p>
+      {/*  HERO  */}
+      <header
+        className="hero-section"
+        style={{
+          backgroundImage: `url(${bgUrl})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="hero-overlay">
+          <div className="hero-content text-center text-white">
+            <span className="script-text">Rasa</span>
+            <h1>MANADO</h1>
+            <p className="lead fs-4">
+              Jelajahi cita rasa khas Manado dan kisah di baliknya.
+            </p>
+          </div>
         </div>
       </header>
 
-      {/* ========== BRAND SECTION ========== */}
-      <section id="brand" className="py-5 bg-light">
-        <div className="container">
-          <div className="card shadow-lg">
-            <div className="card-body p-lg-5">
-              <div className="row align-items-center">
-                <div className="col-lg-6 mb-4 mb-lg-0">
-                  <Image
-                    src="/images/logo/meimobran.jpg"
-                    alt="Suasana Meimo"
-                    width={600}
-                    height={400}
-                    className="rounded img-fluid"
-                    style={{
-                      objectFit: "cover",
-                      width: "100%",
-                      height: "400px",
-                    }}
-                  />
-                </div>
-                <div className="col-lg-6">
-                  <h2 className="display-4 text-primary">MEIMO</h2>
-                  <p className="text-muted mb-3">Temukan Rasa Otentik Manado.</p>
-                  <p>
-                    Meimo adalah brand yang didedikasikan untuk membawa cita rasa
-                    otentik masakan Manado ke panggung kuliner yang lebih luas.
-                  </p>
-
-                  {/* Search Bar */}
-                  <form
-                    onSubmit={handleSearch}
-                    className="input-group mb-3 mt-4 shadow-sm"
-                  >
-                    <input
-                      type="text"
-                      className="form-control form-control-lg"
-                      placeholder="Cari masakan favorit Anda..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button
-                      className="btn btn-primary"
-                      type="submit"
-                      id="button-addon2"
-                    >
-                      🔍 Cari
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========== MENU GALLERY ========== */}
+      {/*  MENU GALLERY */}
       <section id="menu-gallery" className="py-5 bg-dark text-white">
         <div className="container text-center mb-5">
           <h2>Galeri Menu Spesial</h2>
           <p>Klik gambar untuk melihat detail, sejarah, dan resepnya.</p>
         </div>
         <div className="horizontal-scroll-wrapper">
-          {/* Tampilkan data fallback jika loading, ATAU tampilkan filteredMenu jika sudah selesai */}
-          {(loadingMenu ? menuData : filteredMenu).map((menu) => (
+          {filteredMenu.map((menu) => (
             <div
-              // =======================================================
-              // 3. KEY DIPERBARUI (Prioritaskan _id)
-              // =======================================================
-              key={menu._id ?? menu.id ?? menu.name}
+              key={menu._id || menu.name}
               className="scroll-card-item"
-              onClick={() => handleShowModal(menu)}
+              onClick={() => setSelectedMenu(menu)}
             >
               <div className="card menu-card shadow">
-                <Image
+                <img
                   src={menu.imgSrc}
                   alt={menu.name}
-                  width={400}
-                  height={300}
+                  style={{
+                    width: "100%",
+                    height: "300px",
+                    objectFit: "cover",
+                  }}
                   className="card-img-top"
                 />
                 <div className="card-body">
                   <h5>{menu.name}</h5>
                   <div className="text-warning fs-5 mb-2">
-                    {menu.ratingStars}
+                    {menu.ratingStars || "★★★★☆"}
                   </div>
                   <p className="small text-muted">
-                    {menu.description.substring(0, 70)}...
+                    {menu.description?.substring(0, 70)}...
                   </p>
-                  <div className="d-flex justify-content-between align-items-center mt-3">
-                    <small className="text-muted">
-                      {/* Harga (karena price 'required', tidak perlu cek) */}
-                      Rp {menu.price.toLocaleString()}
-                    </small>
-                    <div className="d-flex gap-2">
-                      <button
-                        className="btn btn-sm btn-outline-light"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(menu, -1); // Logika -1 sekarang ditangani
-                        }}
-                      >
-                        −
-                      </button>
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(menu, 1);
-                        }}
-                      >
-                        + Tambah
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -537,7 +272,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ========== MODAL DETAIL MENU ========= */}
+      {/*  MODAL DETAIL MENU */}
       {showModal && selectedMenu && (
         <div
           className="modal fade show d-block"
@@ -563,13 +298,16 @@ export default function Home() {
               <div className="modal-body p-4 p-lg-5">
                 <div className="row">
                   <div className="col-lg-5 mb-4 mb-lg-0">
-                    <Image
+                    <img
                       src={selectedMenu.imgSrc}
                       alt={selectedMenu.name}
-                      width={500}
-                      height={400}
+                      style={{
+                        width: "100%",
+                        height: "400px",
+                        objectFit: "cover",
+                        borderRadius: "0.5rem",
+                      }}
                       className="img-fluid rounded shadow-sm mb-3"
-                      style={{ width: "100%", height: "400px", objectFit: "cover" }}
                     />
                     <div className="p-3 bg-light rounded text-center border">
                       <div className="text-warning fs-3 mb-2">
@@ -581,25 +319,25 @@ export default function Home() {
 
                   <div className="col-lg-7">
                     <div className="mb-4">
-                      <h4>📖 Deskripsi</h4>
+                      <h4> Deskripsi</h4>
                       <p>{selectedMenu.description}</p>
                     </div>
 
                     {selectedMenu.ingredients && (
                       <div className="mb-4">
-                        <h4>🥘 Bahan-Bahan Utama</h4>
+                        <h4> Bahan-Bahan Utama</h4>
                         <p className="text-muted">{selectedMenu.ingredients}</p>
                       </div>
                     )}
 
                     <div className="mb-4">
-                      <h4>📜 Sejarah & Budaya</h4>
+                      <h4> Sejarah & Budaya</h4>
                       <p>{selectedMenu.history}</p>
                     </div>
 
                     {selectedMenu.tips && (
                       <div className="mb-4">
-                        <h4>💡 Tips Chef</h4>
+                        <h4> Tips Chef</h4>
                         <div className="alert alert-warning bg-warning-subtle border-warning">
                           {selectedMenu.tips}
                         </div>
@@ -607,7 +345,7 @@ export default function Home() {
                     )}
 
                     <hr className="my-4" />
-                    <h4>💬 Bagikan Pengalaman Anda</h4>
+                    <h4> Bagikan Pengalaman Anda</h4>
 
                     <div className="mb-3 p-3 bg-light rounded border rating-stars text-center">
                       <span className="fw-bold me-3 align-middle fs-5">
@@ -656,7 +394,7 @@ export default function Home() {
                         ></textarea>
                       </div>
                       <button type="submit" className="btn btn-primary w-100 btn-lg">
-                        📤 Kirim Komentar
+                         Kirim Komentar
                       </button>
                     </form>
 
@@ -714,7 +452,7 @@ export default function Home() {
       <footer className="footer mt-5">
         <div className="container">
           <div className="mb-4">
-            <h5 className="mb-3 text-center">📍 Lokasi Kami</h5>
+            <h5 className="mb-3 text-center"> Lokasi Kami</h5>
             <div className="ratio ratio-21x9">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.712454356452!2d106.78726097499202!3d-6.174721693801916!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f70002bcd3f9%3A0xcf51c0e1b63aedf4!2sMeimo%20Masakan%20Manado%20Neo%20Soho!5e0!3m2!1sid!2sid!4v1730989000000!5m2!1sid!2sid"

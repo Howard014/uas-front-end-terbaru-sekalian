@@ -1,211 +1,195 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const multer = require("multer");
-const path = require("path");
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
 app.use(cors());
 app.use(express.json());
-app.set("json spaces", 2);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI;
-if (!MONGO_URI) {
-  console.error(" Error: MONGO_URI is not defined in .env file");
-  process.exit(1);
-}
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log(" Connected to MongoDB Atlas successfully"))
-  .catch((err) => {
-    console.error(" MongoDB connection error:", err.message);
-    console.error(" Tips: Periksa IP whitelist dan credential user di Atlas.");
+// Use MONGO_URI from .env, fallback to local
+const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/meimoDB";
+const PORT = process.env.PORT || 5000;
+
+async function start() {
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log("MongoDB Connected");
+  } catch (err) {
+    console.error("Mongo Error:", err);
+    // Exit so developer notices; remove process.exit if you want the server
+    // to continue running without a DB connection.
     process.exit(1);
+  }
+
+  // Schemas
+  const BackgroundSchema = new mongoose.Schema({
+    nama: String,
+    url: String,
   });
+  const Background = mongoose.model("Background", BackgroundSchema);
 
-// ===================================
-// SCHEMAS & MODELS
-// ===================================
+  const MenuSchema = new mongoose.Schema({
+    nama: String,
+    deskripsi: String,
+    gambar: String,
+    harga: Number,
+    ingredients: String,
+    history: String,
+    tips: String,
+  });
+  const Menu = mongoose.model("Menu", MenuSchema);
 
-// Menus (struktur data di MongoDB Atlas)
-const menuSchema = new mongoose.Schema({
-  nama: { type: String, required: true },
-  kategori: { type: String, required: true },
-  deskripsi: { type: String },
-  gambar: { type: String },
-  // ‼ PERHATIAN: Schema Anda di sini sangat sederhana.
-  // Data seperti 'price', 'rating' dari frontend TIDAK akan tersimpan
-  // kecuali Anda tambahkan field-nya di sini.
-  price: { type: Number, default: 0 },
-});
-const Menu = mongoose.model("menus", menuSchema); //  pakai koleksi "menus"
-
-// Comments
-const commentSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  text: { type: String, required: true },
-  date: { type: String, required: true },
-  rating: Number,
-  menuId: mongoose.Schema.Types.ObjectId,
-});
-const Comment = mongoose.model("comments", commentSchema);
-
-// ✨ [BARU] Schema untuk Pesanan (Orders)
-const orderSchema = new mongoose.Schema({
-  items: [
-    {
-      name: { type: String, required: true },
-      price: { type: Number, required: true },
-      cost: { type: Number, default: 0 },
-      qty: { type: Number, required: true },
-    },
-  ],
-  total: { type: Number, required: true },
-  profit: { type: Number, default: 0 },
-  status: { type: String, default: "pending" }, // pending (belum bayar), completed
-  createdAt: { type: Date, default: Date.now },
-});
-const Order = mongoose.model("orders", orderSchema);
-
-// File Upload Setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
-const upload = multer({ storage });
-
-// ===================================
-// ROUTES
-// ===================================
-app.get("/", (req, res) => {
-  res.send(" Meimo API is running!");
-});
-
-// MENUS ROUTES (Tetap)
-app.get("/api/menus", async (req, res) => {
-  try {
-    const menus = await Menu.find();
-    res.json(menus);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-app.post("/api/menus", async (req, res) => {
-  try {
-    const newMenu = new Menu(req.body);
-    const saved = await newMenu.save();
-    res.status(201).json(saved);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-app.put("/api/menus/:id", async (req, res) => {
-  try {
-    const updated = await Menu.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!updated) return res.status(404).json({ message: "Menu not found" });
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-app.delete("/api/menus/:id", async (req, res) => {
-  try {
-    const deleted = await Menu.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Menu not found" });
-    res.json({ message: "Menu deleted" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// COMMENTS ROUTES (Tetap)
-app.get("/api/comments", async (req, res) => {
-  try {
-    const comments = await Comment.find().sort({ date: -1 });
-    res.json(comments);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-app.post("/api/comments", async (req, res) => {
-  try {
-    const saved = await new Comment(req.body).save();
-    res.status(201).json(saved);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-// ✨ [BARU] ROUTES UNTUK PESANAN (ORDERS)
-// GET: Mengambil semua pesanan (untuk admin)
-app.get("/api/orders", async (req, res) => {
-  try {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// PUT: Update status pesanan (untuk admin)
-app.put("/api/orders/:id", async (req, res) => {
-  try {
-    const { status } = req.body;
-    const updatedOrder = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-    if (!updatedOrder) return res.status(404).json({ message: "Order not found" });
-    res.json(updatedOrder);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-// POST: Membuat pesanan baru (dari pelanggan)
-app.post("/api/orders", async (req, res) => {
-  try {
-    const { items, total, profit } = req.body;
-
-    if (!items || !total || items.length === 0) {
-      return res.status(400).json({ message: "Data pesanan tidak lengkap" });
+  // API ROUTE
+  // Backgrounds - GET
+  app.get("/api/backgrounds", async (req, res) => {
+    try {
+      const data = await Background.find();
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch backgrounds" });
     }
-
-    const newOrder = new Order({
-      items,
-      total,
-      profit: profit || 0,
-      status: "pending", // Otomatis "belum bayar"
-    });
-
-    const savedOrder = await newOrder.save();
-    res.status(201).json(savedOrder);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-// UPLOAD ROUTE (Tetap)
-app.post("/upload", upload.single("image"), (req, res) => {
-  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-  res.json({
-    message: " Upload success",
-    filePath: "/uploads/" + req.file.filename,
   });
-});
 
-// Start Server
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+  // Backgrounds - POST
+  app.post("/api/backgrounds", async (req, res) => {
+    try {
+      const bg = new Background(req.body);
+      await bg.save();
+      res.status(201).json(bg);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create background" });
+    }
+  });
+
+  // Menus - GET
+  app.get("/api/menus", async (req, res) => {
+    try {
+      const data = await Menu.find();
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch menus" });
+    }
+  });
+
+  // Menus - POST
+  app.post("/api/menus", async (req, res) => {
+    try {
+      const menu = new Menu(req.body);
+      await menu.save();
+      res.status(201).json(menu);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to create menu" });
+    }
+  });
+
+  // Seed data if database is empty
+  async function seedData() {
+    try {
+      const bgCount = await Background.countDocuments();
+      if (bgCount === 0) {
+        console.log("Seeding backgrounds...");
+        await Background.insertMany([
+          {
+            nama: "Manado Background 1",
+            url: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1200&h=600&fit=crop",
+          },
+          {
+            nama: "Manado Background 2",
+            url: "https://images.unsplash.com/photo-1504674900374-0f6a84f6e8ee?w=1200&h=600&fit=crop",
+          },
+          {
+            nama: "Manado Background 3",
+            url: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1200&h=600&fit=crop",
+          },
+        ]);
+      }
+
+      const menuCount = await Menu.countDocuments();
+      if (menuCount === 0) {
+        console.log("Seeding menus...");
+        await Menu.insertMany([
+          {
+            nama: "Tinutuan",
+            deskripsi:
+              "Bubur daging khas Manado yang gurih dengan kuah yang kaya. Dibuat dari beras yang dimasak lama hingga lembut bersama daging sapi.",
+            gambar:
+              "https://images.unsplash.com/photo-1585521537145-0f1be63a47ba?w=400&h=300&fit=crop",
+            harga: 45000,
+            ingredients: "Beras, daging sapi, santan, telur, bumbu tradisional",
+            history:
+              "Tinutuan adalah hidangan sarapan tradisional dari Manado yang telah menjadi bagian dari identitas kuliner kota ini sejak berabad-abad lalu.",
+            tips: "Sajikan dengan sambal tomat dan telur rebus untuk hasil maksimal.",
+          },
+          {
+            nama: "Cakalang Fufu",
+            deskripsi:
+              "Daging babi asap yang empuk dengan tekstur lunak di dalam dan crispy di luar. Bumbu khas Manado membuat rasanya tak tertahankan.",
+            gambar:
+              "https://images.unsplash.com/photo-1555939594-58d7cb561ada?w=400&h=300&fit=crop",
+            harga: 85000,
+            ingredients: "Daging babi, bumbu rempah, garam, kunyit, jahe",
+            history:
+              "Cakalang fufu adalah pengembangan modern dari cakalang asap tradisional Manado yang dipopulerkan di era 1980-an.",
+            tips: "Nikmati hangat-hangat dengan nasi putih atau sambal.",
+          },
+          {
+            nama: "Woku Manado",
+            deskripsi:
+              "Tumisan khas Manado dengan bumbu rempah yang kaya dan aroma yang menggugah selera. Dapat menggunakan berbagai jenis daging atau ikan.",
+            gambar:
+              "https://images.unsplash.com/photo-1626082927389-6cd097cdc46e?w=400&h=300&fit=crop",
+            harga: 65000,
+            ingredients:
+              "Daging/Ikan, bawang merah, bawang putih, cabe rawit, kunyit, jahe, kelapa",
+            history:
+              "Woku adalah teknik memasak asli Manado yang sudah ada sejak zaman pra-kolonial. Nama 'woku' berasal dari alat tradisional penggerus bumbu.",
+            tips: "Gunakan wajan besar dan api tinggi untuk hasil yang sempurna.",
+          },
+          {
+            nama: "Ikan Bakar Manado",
+            deskripsi:
+              "Ikan segar yang dipanggang dengan bumbu rempah khas Manado. Dagingnya juicy dan warna gosongnya sempurna.",
+            gambar:
+              "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
+            harga: 75000,
+            ingredients: "Ikan snapper, bumbu rempah, minyak kelapa, jeruk limau",
+            history:
+              "Ikan bakar telah menjadi makanan pokok masyarakat Manado karena lokasi geografisnya yang dekat dengan laut.",
+            tips: "Pilih ikan yang masih segar untuk hasil terbaik.",
+          },
+          {
+            nama: "Tinutuan Manado Special",
+            deskripsi:
+              "Versi premium tinutuan dengan tambahan seafood pilihan seperti udang dan kepiting.",
+            gambar:
+              "https://images.unsplash.com/photo-1612528443702-f6741f271a04?w=400&h=300&fit=crop",
+            harga: 95000,
+            ingredients: "Beras, udang, kepiting, santan, telur, bumbu pilihan",
+            history:
+              "Inovasi dari tinutuan tradisional yang dikembangkan untuk memenuhi selera pelanggan modern.",
+            tips: "Pastikan seafood dalam kondisi segar untuk rasa yang optimal.",
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error("Error seeding data:", err);
+    }
+  }
+
+  // Seed data on startup
+  await seedData();
+
+  // Testing
+  app.get("/", (req, res) => {
+    res.send("Backend Meimo Running...");
+  });
+
+  // RUN SERVER
+  app.listen(PORT, () =>
+    console.log(`Server berjalan di http://localhost:${PORT}`)
+  );
+}
+
+start();
