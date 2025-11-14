@@ -111,7 +111,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error("Gagal membuat order");
 
       // Kurangi stock
-      await fetch(http://localhost:5000/api/menu/${menuId}, {
+      await fetch(`http://localhost:5000/api/menu/${menuId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...menu, stock: menu.stock - qty }),
@@ -128,8 +128,10 @@ export default function AdminDashboard() {
   const handleSaveMenu = async (menu: MenuItem) => {
     try {
       const method = menu._id ? "PUT" : "POST";
+      
+      // ✅ PERBAIKAN DI SINI: Menggunakan backtick (`) untuk URL dinamis
       const url = menu._id
-        ? http://localhost:5000/api/menu/${menu._id}
+        ? `http://localhost:5000/api/menu/${menu._id}`
         : "http://localhost:5000/api/menu";
 
       const res = await fetch(url, {
@@ -153,7 +155,8 @@ export default function AdminDashboard() {
     if (!confirm("Are you sure you want to delete this menu item?")) return;
 
     try {
-      const res = await fetch(http://localhost:5000/api/menu/${id}, {
+      // ✅ PERBAIKAN DI SINI: Menggunakan backtick (`) untuk URL dinamis
+      const res = await fetch(`http://localhost:5000/api/menu/${id}`, {
         method: "DELETE",
       });
       if (res.ok) fetchData();
@@ -165,7 +168,8 @@ export default function AdminDashboard() {
   // Complete Order
   const handleCompleteOrder = async (orderId: string) => {
     try {
-      const res = await fetch(http://localhost:5000/api/orders/${orderId}, {
+      // ✅ PERBAIKAN DI SINI: Menggunakan backtick (`) untuk URL dinamis
+      const res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "completed" }),
@@ -242,8 +246,9 @@ export default function AdminDashboard() {
         {/* Tabs */}
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
+            {/* ✅ PERBAIKAN DI SINI: className dinamis menggunakan backtick (`) */}
             <button
-              className={nav-link ${activeTab === "menu" ? "active" : ""}}
+              className={`nav-link ${activeTab === "menu" ? "active" : ""}`}
               onClick={() => setActiveTab("menu")}
             >
               Menu Management
@@ -251,8 +256,9 @@ export default function AdminDashboard() {
           </li>
 
           <li className="nav-item">
+            {/* ✅ PERBAIKAN DI SINI: className dinamis menggunakan backtick (`) */}
             <button
-              className={nav-link ${activeTab === "orders" ? "active" : ""}}
+              className={`nav-link ${activeTab === "orders" ? "active" : ""}`}
               onClick={() => setActiveTab("orders")}
             >
               Order Management
@@ -563,7 +569,7 @@ export default function AdminDashboard() {
                         />
                       </div>
 
-                       <div className="col-12 mb-3">
+                        <div className="col-12 mb-3">
                         <label className="form-label">Ingredients</label>
                         <textarea
                           className="form-control"
@@ -574,7 +580,7 @@ export default function AdminDashboard() {
                         />
                       </div>
 
-                       <div className="col-12 mb-3">
+                        <div className="col-12 mb-3">
                         <label className="form-label">Tips</label>
                         <textarea
                           className="form-control"

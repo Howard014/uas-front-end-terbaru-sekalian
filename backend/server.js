@@ -84,6 +84,44 @@ async function start() {
     }
   });
 
+  // Orders - Schema & Routes
+  const OrderSchema = new mongoose.Schema({
+    items: [
+      {
+        name: String,
+        price: Number,
+        qty: Number,
+      },
+    ],
+    total: Number,
+    status: { type: String, default: "pending" },
+    createdAt: { type: Date, default: Date.now },
+  });
+  const Order = mongoose.model("Order", OrderSchema);
+
+  // Create an order
+  app.post("/api/orders", async (req, res) => {
+    try {
+      console.log("Incoming order:", req.body);
+      const order = new Order(req.body);
+      await order.save();
+      res.status(201).json(order);
+    } catch (err) {
+      console.error("Failed to save order:", err);
+      res.status(500).json({ error: "Failed to save order" });
+    }
+  });
+
+  // Get all orders (for admin/testing)
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const orders = await Order.find().sort({ createdAt: -1 });
+      res.json(orders);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
   // Seed data if database is empty
   async function seedData() {
     try {
