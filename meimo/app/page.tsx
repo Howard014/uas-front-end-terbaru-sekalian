@@ -2,7 +2,6 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { mockBackgrounds, mockMenus } from "@/lib/mockData";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 interface Comment {
@@ -52,7 +51,7 @@ export default function Home() {
   const [loadingMenu, setLoadingMenu] = useState<boolean>(false);
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
 
-  //  Ambil gambar background & menu dari backend atau gunakan mock data
+  //  Ambil gambar background & menu dari backend API
   useEffect(() => {
     async function fetchData() {
       try {
@@ -68,32 +67,25 @@ export default function Home() {
           menuRes.json(),
         ]);
 
-        if (Array.isArray(bgData)) setBackgrounds(bgData);
-        if (Array.isArray(menuData))
+        // Gunakan data dari API
+        if (Array.isArray(bgData) && bgData.length > 0) {
+          setBackgrounds(bgData);
+        }
+        
+        if (Array.isArray(menuData) && menuData.length > 0) {
           setFilteredMenu(
             menuData.map((m: any) => ({
               ...m,
               name: m.nama || m.name,
               description: m.deskripsi || m.description || "",
-              imgSrc: m.gambar || "",
+              imgSrc: m.gambar || m.imgSrc || "",
               ratingStars: "★★★★☆",
               price: m.price || m.harga || 0,
             }))
           );
+        }
       } catch (err) {
-        console.warn("⚠️ API not available, using mock data:", err);
-        // Gunakan mock data jika API tidak tersedia
-        setBackgrounds(mockBackgrounds);
-        setFilteredMenu(
-          mockMenus.map((m) => ({
-            ...m,
-            name: m.nama,
-            description: m.deskripsi || "",
-            imgSrc: m.gambar || "",
-            ratingStars: "★★★★☆",
-            price: m.harga || 0,
-          }))
-        );
+        console.error("❌ Error fetching API data:", err);
       } finally {
         setLoadingMenu(false);
       }
