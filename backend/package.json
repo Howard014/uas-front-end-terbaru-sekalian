@@ -1,6 +1,7 @@
 {
   "name": "meimo-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Backend for Meimo app using Node.js, Express, and MongoDB",
   "main": "server.js",
   "scripts": {
