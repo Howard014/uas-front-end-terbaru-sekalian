@@ -192,13 +192,15 @@ export default function Home() {
       >
         <div className="container-fluid">
           <div className="d-flex align-items-center ms-auto gap-2">
-            <button
-              onClick={() => router.push('/order')}
+            <a
+              href="https://wa.me/6281234567890?text=Halo%2C%20saya%20ingin%20memesan%20dari%20Meimo."
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn btn-warning fw-bold px-4 py-2"
               style={{ borderRadius: "25px" }}
             >
                Dine In / Pesan
-            </button>
+            </a>
           </div>
         </div>
       </nav>

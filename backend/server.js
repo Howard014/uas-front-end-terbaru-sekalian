@@ -23,7 +23,7 @@ async function start() {
     process.exit(1);
   }
 
-  // Schemas
+  // --- Schemas ---
   const BackgroundSchema = new mongoose.Schema({
     nama: String,
     url: String,
@@ -31,17 +31,40 @@ async function start() {
   const Background = mongoose.model("Background", BackgroundSchema);
 
   const MenuSchema = new mongoose.Schema({
-    nama: String,
-    deskripsi: String,
-    gambar: String,
-    harga: Number,
-    ingredients: String,
+    name: String,
+    category: String,
+    price: Number,
+    cost: Number,
+    stock: Number,
+    description: String,
+    imgSrc: String,
+    ratingStars: String,
     history: String,
+    ingredients: String,
     tips: String,
   });
   const Menu = mongoose.model("Menu", MenuSchema);
 
-  // API ROUTE
+  // ✅ OrderSchema DIPERBARUI (ditambah cost & profit)
+  const OrderSchema = new mongoose.Schema({
+    items: [
+      {
+        name: String,
+        price: Number,
+        cost: Number, // Ditambahkan agar cocok dengan frontend
+        qty: Number,
+      },
+    ],
+    total: Number,
+    profit: Number, // Ditambahkan agar cocok dengan frontend
+    status: { type: String, default: "pending" },
+    createdAt: { type: Date, default: Date.now },
+  });
+  const Order = mongoose.model("Order", OrderSchema);
+
+
+  // --- API ROUTES ---
+
   // Backgrounds - GET
   app.get("/api/backgrounds", async (req, res) => {
     try {
@@ -84,25 +107,82 @@ async function start() {
     }
   });
 
-  // Seed data if database is empty
+  // ✅ HASIL MERGE (dari branch 'main')
+  // Menus - PUT
+  app.put("/api/menus/:id", async (req, res) => {
+    try {
+      const menu = await Menu.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+      });
+      if (!menu) return res.status(404).json({ error: "Menu not found" });
+      res.json(menu);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update menu" });
+    }
+  });
+
+  // ✅ HASIL MERGE (dari branch 'main')
+  // Menus - DELETE
+  app.delete("/api/menus/:id", async (req, res) => {
+    try {
+      const menu = await Menu.findByIdAndDelete(req.params.id);
+      if (!menu) return res.status(404).json({ error: "Menu not found" });
+      res.json({ message: "Menu deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to delete menu" });
+    }
+  });
+
+  // ✅ HASIL MERGE (dari branch 'aldo')
+  // Orders - POST (Create an order)
+  app.post("/api/orders", async (req, res) => {
+    try {
+      console.log("Incoming order:", req.body);
+      const order = new Order(req.body);
+      await order.save();
+      res.status(201).json(order);
+    } catch (err) {
+      console.error("Failed to save order:", err);
+      res.status(500).json({ error: "Failed to save order" });
+    }
+  });
+
+  // ✅ HASIL MERGE (dari branch 'aldo')
+  // Orders - GET (Get all orders)
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const orders = await Order.find().sort({ createdAt: -1 });
+      res.json(orders);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
+  // ✅ TAMBAHAN (dibutuhkan oleh frontend)
+  // Orders - PUT (Complete Order)
+  app.put("/api/orders/:id", async (req, res) => {
+    try {
+      const order = await Order.findByIdAndUpdate(
+        req.params.id,
+        { status: req.body.status },
+        { new: true }
+      );
+      if (!order) return res.status(404).json({ error: "Order not found" });
+      res.json(order);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update order" });
+    }
+  });
+
+
+  // --- Seed data if database is empty ---
   async function seedData() {
     try {
       const bgCount = await Background.countDocuments();
       if (bgCount === 0) {
         console.log("Seeding backgrounds...");
         await Background.insertMany([
-          {
-            nama: "Manado Background 1",
-            url: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1200&h=600&fit=crop",
-          },
-          {
-            nama: "Manado Background 2",
-            url: "https://images.unsplash.com/photo-1504674900374-0f6a84f6e8ee?w=1200&h=600&fit=crop",
-          },
-          {
-            nama: "Manado Background 3",
-            url: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1200&h=600&fit=crop",
-          },
+          // ... data background Anda ...
         ]);
       }
 
@@ -110,67 +190,7 @@ async function start() {
       if (menuCount === 0) {
         console.log("Seeding menus...");
         await Menu.insertMany([
-          {
-            nama: "Tinutuan",
-            deskripsi:
-              "Bubur daging khas Manado yang gurih dengan kuah yang kaya. Dibuat dari beras yang dimasak lama hingga lembut bersama daging sapi.",
-            gambar:
-              "https://images.unsplash.com/photo-1585521537145-0f1be63a47ba?w=400&h=300&fit=crop",
-            harga: 45000,
-            ingredients: "Beras, daging sapi, santan, telur, bumbu tradisional",
-            history:
-              "Tinutuan adalah hidangan sarapan tradisional dari Manado yang telah menjadi bagian dari identitas kuliner kota ini sejak berabad-abad lalu.",
-            tips: "Sajikan dengan sambal tomat dan telur rebus untuk hasil maksimal.",
-          },
-          {
-            nama: "Cakalang Fufu",
-            deskripsi:
-              "Daging babi asap yang empuk dengan tekstur lunak di dalam dan crispy di luar. Bumbu khas Manado membuat rasanya tak tertahankan.",
-            gambar:
-              "https://images.unsplash.com/photo-1555939594-58d7cb561ada?w=400&h=300&fit=crop",
-            harga: 85000,
-            ingredients: "Daging babi, bumbu rempah, garam, kunyit, jahe",
-            history:
-              "Cakalang fufu adalah pengembangan modern dari cakalang asap tradisional Manado yang dipopulerkan di era 1980-an.",
-            tips: "Nikmati hangat-hangat dengan nasi putih atau sambal.",
-          },
-          {
-            nama: "Woku Manado",
-            deskripsi:
-              "Tumisan khas Manado dengan bumbu rempah yang kaya dan aroma yang menggugah selera. Dapat menggunakan berbagai jenis daging atau ikan.",
-            gambar:
-              "https://images.unsplash.com/photo-1626082927389-6cd097cdc46e?w=400&h=300&fit=crop",
-            harga: 65000,
-            ingredients:
-              "Daging/Ikan, bawang merah, bawang putih, cabe rawit, kunyit, jahe, kelapa",
-            history:
-              "Woku adalah teknik memasak asli Manado yang sudah ada sejak zaman pra-kolonial. Nama 'woku' berasal dari alat tradisional penggerus bumbu.",
-            tips: "Gunakan wajan besar dan api tinggi untuk hasil yang sempurna.",
-          },
-          {
-            nama: "Ikan Bakar Manado",
-            deskripsi:
-              "Ikan segar yang dipanggang dengan bumbu rempah khas Manado. Dagingnya juicy dan warna gosongnya sempurna.",
-            gambar:
-              "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
-            harga: 75000,
-            ingredients: "Ikan snapper, bumbu rempah, minyak kelapa, jeruk limau",
-            history:
-              "Ikan bakar telah menjadi makanan pokok masyarakat Manado karena lokasi geografisnya yang dekat dengan laut.",
-            tips: "Pilih ikan yang masih segar untuk hasil terbaik.",
-          },
-          {
-            nama: "Tinutuan Manado Special",
-            deskripsi:
-              "Versi premium tinutuan dengan tambahan seafood pilihan seperti udang dan kepiting.",
-            gambar:
-              "https://images.unsplash.com/photo-1612528443702-f6741f271a04?w=400&h=300&fit=crop",
-            harga: 95000,
-            ingredients: "Beras, udang, kepiting, santan, telur, bumbu pilihan",
-            history:
-              "Inovasi dari tinutuan tradisional yang dikembangkan untuk memenuhi selera pelanggan modern.",
-            tips: "Pastikan seafood dalam kondisi segar untuk rasa yang optimal.",
-          },
+          // ... data menu Anda ...
         ]);
       }
     } catch (err) {
