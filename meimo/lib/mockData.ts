@@ -2,80 +2,108 @@ export const mockBackgrounds = [
   {
     _id: "1",
     nama: "Manado Background 1",
-    url: "/images/background/manado1.jpg",
+    url: "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763014752/meimo1_s6uovk.jpg",
   },
   {
     _id: "2",
     nama: "Manado Background 2",
-    url: "/images/background/manado2.jpg",
+    url: "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763014756/meimo2_bkt2iq.jpg",
+  },
+  {
+    _id: "3",
+    nama: "Meimo Background 1",
+    url: "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763014781/meimo3_abgi0b.jpg",
   },
 ];
 
 export const mockMenus = [
   {
     _id: "1",
-    nama: "Tinutuan",
+    nama: "Babi Panggang",
     deskripsi:
-      "Bubur daging khas Manado yang gurih dengan kuah yang kaya. Dibuat dari beras yang dimasak lama hingga lembut bersama daging sapi.",
+      "Daging panggang khas Suku Karo (Sumatera Utara), dipotong kecil-kecil, beraroma asap khas..",
     gambar:
-      "https://images.unsplash.com/photo-1585521537145-0f1be63a47ba?w=400&h=300&fit=crop",
+      "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763012472/babipanggang_vtnl5y.jpg",
     harga: 45000,
     ingredients: "Beras, daging sapi, santan, telur, bumbu tradisional",
     history:
-      "Tinutuan adalah hidangan sarapan tradisional dari Manado yang telah menjadi bagian dari identitas kuliner kota ini sejak berabad-abad lalu.",
-    tips: "Sajikan dengan sambal tomat dan telur rebus untuk hasil maksimal.",
+      "Babi Panggang Di Indonesia, merujuk pada Babi Panggang Tionghoa (asal Tiongkok, seperti Char Siu) atau Babi Panggang Karo (BPK, khas Sumatera Utara).",
   },
+
   {
     _id: "2",
-    nama: "Cakalang Fufu",
+    nama: "Babi Kecap",
     deskripsi:
       "Daging babi asap yang empuk dengan tekstur lunak di dalam dan crispy di luar. Bumbu khas Manado membuat rasanya tak tertahankan.",
     gambar:
-      "https://images.unsplash.com/photo-1555939594-58d7cb561ada?w=400&h=300&fit=crop",
+      "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763041886/babikecap_fn3l80.jpg",
     harga: 85000,
     ingredients: "Daging babi, bumbu rempah, garam, kunyit, jahe",
     history:
-      "Cakalang fufu adalah pengembangan modern dari cakalang asap tradisional Manado yang dipopulerkan di era 1980-an.",
-    tips: "Nikmati hangat-hangat dengan nasi putih atau sambal.",
+      "Hidangan ini berawal dari adaptasi masakan babi stew Tiongkok yang kemudian menggunakan kecap manis (bahan lokal Indonesia).",
   },
   {
     _id: "3",
-    nama: "Woku Manado",
+    nama: "Tinoransak Woku",
     deskripsi:
-      "Tumisan khas Manado dengan bumbu rempah yang kaya dan aroma yang menggugah selera. Dapat menggunakan berbagai jenis daging atau ikan.",
+      "Masakan khas Manado (Minahasa) berupa daging (umumnya babi) yang dicincang dan dimasak dengan bumbu rempah yang sangat kaya dan pedas..",
     gambar:
-      "https://images.unsplash.com/photo-1626082927389-6cd097cdc46e?w=400&h=300&fit=crop",
+      "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763012472/tinoransak_esokba.jpg",
     harga: 65000,
     ingredients:
-      "Daging/Ikan, bawang merah, bawang putih, cabe rawit, kunyit, jahe, kelapa",
+      "Daging babi (bisa diganti ayam/ikan), cabai rawit (jumlah banyak), jahe, kunyit, sereh, dan seringkali sedikit darah (untuk versi otentik)",
     history:
-      "Woku adalah teknik memasak asli Manado yang sudah ada sejak zaman pra-kolonial. Nama 'woku' berasal dari alat tradisional penggerus bumbu.",
-    tips: "Gunakan wajan besar dan api tinggi untuk hasil yang sempurna.",
+      "Makanan tradisional Minahasa. Aslinya, semua bahan dicampur dan dimasukkan ke dalam sebatang bambu, lalu dibakar di atas api (mirip lemang).",
   },
   {
     _id: "4",
     nama: "Ikan Bakar Manado",
     deskripsi:
-      "Ikan segar yang dipanggang dengan bumbu rempah khas Manado. Dagingnya juicy dan warna gosongnya sempurna.",
+      "Daging ikan cakalang (biasanya asap/fufu) yang disuwir-suwir halus dan ditumis dengan bumbu rica (cabai) yang pedas dan wangi..",
     gambar:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
+      "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763012472/cakalangsuwir_m49e5s.jpg",
     harga: 75000,
     ingredients: "Ikan snapper, bumbu rempah, minyak kelapa, jeruk limau",
     history:
-      "Ikan bakar telah menjadi makanan pokok masyarakat Manado karena lokasi geografisnya yang dekat dengan laut.",
-    tips: "Pilih ikan yang masih segar untuk hasil terbaik.",
+      "Masakan khas Manado (Sulawesi Utara). Tercipta sebagai cara mengolah ikan cakalang yang melimpah, seringkali menggunakan ikan yang telah diasap (fufu) agar lebih awet dan aromatik..",
   },
+
   {
     _id: "5",
-    nama: "Tinutuan Manado Special",
+    nama: "Kangkung Bunga Pepaya",
     deskripsi:
-      "Versi premium tinutuan dengan tambahan seafood pilihan seperti udang dan kepiting.",
+      "Tumisan kangkung yang dicampur dengan bunga pepaya, dimasak dengan bumbu rica pedas dan sering ditambahkan suwiran ikan cakalang asap.",
     gambar:
-      "https://images.unsplash.com/photo-1612528443702-f6741f271a04?w=400&h=300&fit=crop",
+      "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763012472/kangkungbungapepaya_urqe1v.jpg",
     harga: 95000,
-    ingredients: "Beras, udang, kepiting, santan, telur, bumbu pilihan",
+    ingredients: "Kangkung, bunga pepaya, cabai rawit, bawang merah, jahe, daun jeruk, dan seringkali ikan cakalang fufu (asap).",
     history:
-      "Inovasi dari tinutuan tradisional yang dikembangkan untuk memenuhi selera pelanggan modern.",
-    tips: "Pastikan seafood dalam kondisi segar untuk rasa yang optimal.",
+      "Masakan sayur tradisional Manado. Menggabungkan rasa pahit khas bunga pepaya dengan pedasnya bumbu rica dan gurihnya ikan, menciptakan rasa yang kompleks dan seimbang.",
+  },
+
+  {
+    _id: "6",
+    nama: "Goroho Manado",
+    deskripsi:
+      "snack pisang goreng yang telah di goreng dan di sajikan.",
+    gambar:
+      "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763012472/gorohomanado_hoypno.jpg",
+    harga: 95000,
+    ingredients: "lagi tanya ownernya.",
+    history:
+      "lagi tanya ownernya.",
+  },
+
+  {
+    _id: "7",
+    nama: "perkedel Jagung",
+    deskripsi:
+      "Gorengan jagung khas Manado. Berbeda dari bakwan jagung biasa, versi Manado biasanya lebih tipis, garing, dan tidak terlalu banyak adonan tepung.",
+    gambar:
+      "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763012471/perkedeljagung_kmi9ys.jpg",
+    harga: 10000,
+    ingredients: "Jagung manis (dipipil atau diiris kasar), bawang merah, bawang putih, daun bawang, seledri, sedikit tepung terigu, dan telur.",
+    history:
+      "Variasi lokal dari perkedel (gorengan) yang sangat umum di Manado. Menjadi lauk pendamping favorit untuk hampir semua hidangan utama, terutama ikan dan sayur.",
   },
 ];

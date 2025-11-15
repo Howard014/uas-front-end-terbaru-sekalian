@@ -5,8 +5,17 @@ import cors from "cors";
 import mongoose from "mongoose";
 
 const app = express();
+// Enable permissive CORS for development so Next dev server can fetch APIs
+// (Change to restricted origins in production)
 app.use(cors());
+app.options("*", cors());
 app.use(express.json());
+
+// Simple request logger for debugging
+app.use((req, res, next) => {
+  console.log(new Date().toISOString(), req.method, req.url);
+  next();
+});
 
 // Use MONGO_URI from .env, fallback to local
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/meimoDB";
@@ -182,7 +191,9 @@ async function start() {
       if (bgCount === 0) {
         console.log("Seeding backgrounds...");
         await Background.insertMany([
-          // ... data background Anda ...
+          { nama: "Manado Background 1", url: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1200&h=600&fit=crop" },
+          { nama: "Manado Background 2", url: "https://images.unsplash.com/photo-1504674900374-0f6a84f6e8ee?w=1200&h=600&fit=crop" },
+          { nama: "Manado Background 3", url: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1200&h=600&fit=crop" },
         ]);
       }
 
@@ -190,7 +201,10 @@ async function start() {
       if (menuCount === 0) {
         console.log("Seeding menus...");
         await Menu.insertMany([
-          // ... data menu Anda ...
+          { name: "Babi Kecap", description: "Irisan daging babi dimasak dengan kecap khas Manado, gurih dan manis.", price: 45000, imgSrc: "/images/menu/babikecap.jpg", category: "Makanan Utama", ingredients: "Beras, daging sapi, santan, telur, bumbu tradisional" },
+          { name: "Babi Panggang", description: "Daging babi panggang dengan bumbu rempah khas dan kulit renyah.", price: 50000, imgSrc: "/images/menu/babipanggang.jpg", category: "Makanan Utama" },
+          { name: "Tinoransak", description: "Daging babi dimasak dalam bambu dengan bumbu pedas khas.", price: 55000, imgSrc: "/images/menu/tinorangsak.jpg", category: "Makanan Utama" },
+          { name: "Cakalang Suwir", description: "Ikan cakalang asap suwir dimasak rica-rica pedas.", price: 35000, imgSrc: "/images/menu/cakalangsuir.jpg", category: "Makanan Utama" },
         ]);
       }
     } catch (err) {
@@ -207,9 +221,16 @@ async function start() {
   });
 
   // RUN SERVER
-  app.listen(PORT, () =>
-    console.log(`Server berjalan di http://localhost:${PORT}`)
-  );
+  // Bind to all interfaces so localhost/127.0.0.1/::1 all work consistently
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    try {
+      const addr = server.address();
+      console.log(`Server berjalan di http://localhost:${PORT}`);
+      console.log("Bind address:", addr);
+    } catch (e) {
+      console.log(`Server berjalan di http://localhost:${PORT}`);
+    }
+  });
 }
 
 start();
