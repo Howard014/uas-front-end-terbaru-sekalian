@@ -184,17 +184,17 @@ async function start() {
         await Background.insertMany([
           {
             nama: "Manado Background 1",
-            url: "/images/background/manado1.jpg",
+            url: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=1200&h=600&fit=crop",
           },
           {
             nama: "Manado Background 2",
-            url: "/images/background/manado2.jpg",
+            url: "https://images.unsplash.com/photo-1504674900374-0f6a84f6e8ee?w=1200&h=600&fit=crop",
           },
-                    {
+          {
             nama: "Manado Background 3",
-            url: "/images/background/manado2.jpg",
+            url: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1200&h=600&fit=crop",
           },
-
+          // ... data background Anda ...
         ]);
       }
 
