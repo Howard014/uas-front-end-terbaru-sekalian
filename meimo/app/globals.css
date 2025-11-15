@@ -1,5 +1,5 @@
 /* ==================================
-  GABUNGAN globals.css + style.css 
+  GABUNGAN globals.css + style.css
 ==================================
 */
 
@@ -8,286 +8,296 @@
 
 /* 2. Variabel Root (Global + Tema Bootstrap) */
 :root {
-  /* Variabel Global */
-  --background: #ffffff;
-  --foreground: #212529; /* Warna teks Bootstrap standar */
-  --font-sans: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-heading: 'Playfair Display', serif;
+  /* Variabel Global */
+  --background: #ffffff;
+  --foreground: #212529; /* Warna teks Bootstrap standar */
+  --font-sans: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: 'Playfair Display', serif;
 
-  /* 🎨 Variabel Tema Khas Manado (Override Bootstrap) */
-  --bs-primary: #008080; /* Teal (Laut) */
-  --bs-secondary: #6c757d;
-  --bs-success: #198754;
-  --bs-info: #0dcaf0;
-  --bs-warning: #ff8c00; /* Oranye (Rempah) */
-  --bs-danger: #dc3545;
-  --bs-light: #f8f9fa;
-  --bs-dark: #212529;
-  
-  /* Warna Kustom */
-  --manado-gold: #D4AF37;
-  --manado-dark-bg: #2a2a2a;
+  /* 🎨 Variabel Tema Khas Manado (Override Bootstrap) */
+  --bs-primary: #008080; /* Teal (Laut) */
+  --bs-secondary: #6c757d;
+  --bs-success: #198754;
+  --bs-info: #0dcaf0;
+  --bs-warning: #ff8c00; /* Oranye (Rempah) */
+  --bs-danger: #dc3545;
+  --bs-light: #f8f9fa;
+  --bs-dark: #212529;
+ 
+  /* Warna Kustom */
+  --manado-gold: #D4AF37;
+  --manado-dark-bg: #2a2a2a;
 }
 
 /* 3. Dark Mode */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1a1a1a;
-    --foreground: #f8f9fa; /* Warna teks Bootstrap-dark */
-  }
-  
-  /* Bootstrap dark mode overrides */
-  body {
-    background-color: var(--background) !important;
-    color: var(--foreground) !important;
-  }
+  :root {
+    --background: #1a1a1a;
+    --foreground: #f8f9fa; /* Warna teks Bootstrap-dark */
+  }
+ 
+  /* Bootstrap dark mode overrides */
+  body {
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+  }
 }
 
 /* 4. Global Element Styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-weight: 700;
 }
 
 /* ==================================
-5. Custom Component Styles 
+5. Custom Component Styles
 ==================================
 */
 
 /* Navbar */
 .navbar.fixed-top {
-  transition: background-color 0.3s ease-in-out, padding 0.3s ease-in-out;
-  background-color: transparent; /* Awalnya transparan */
+  transition: background-color 0.3s ease-in-out, padding 0.3s ease-in-out;
+  background-color: transparent; /* Awalnya transparan */
 }
 
 .navbar.scrolled {
-  background-color: rgba(33, 37, 41, 0.95); /* Menjadi gelap saat di-scroll */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: rgba(33, 37, 41, 0.95); /* Menjadi gelap saat di-scroll */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand {
-  font-family: var(--font-heading);
-  font-weight: 900;
-  font-size: 1.75rem;
-  color: var(--manado-gold) !important;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 1.75rem;
+  color: var(--manado-gold) !important;
 }
 
 /* Hero Section (Slideshow) */
 .hero-section {
-  position: relative;
-  height: 100vh;
-  min-height: 600px;
-  overflow: hidden;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+  overflow: hidden;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-slideshow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .hero-slide {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1.5s ease-in-out;
-  z-index: 1;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out; /* <-- INI TRANSISI SMOOTH ANDA */
+  z-index: 1;
 }
 
 /* Efek vignette gelap agar teks terbaca */
 .hero-slideshow::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.6) 100%);
-  z-index: 2;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.6) 100%);
+  z-index: 2;
 }
 
+
+/* ================================== */
+/*  (INI BAGIAN YANG DITAMBAHKAN)  */
+/* ================================== */
+.hero-overlay {
+  position: relative; /* Diperlukan untuk z-index */
+  z-index: 3; /* Memastikan teks selalu di atas slideshow */
+}
+/* ================================== */
+
 .hero-content {
-  position: relative;
-  z-index: 3;
-  text-align: center;
-  padding: 2rem;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+  position: relative;
+  z-index: 3; /* z-index ini sekarang bisa dihapus karena sudah ada di parent-nya */
+  text-align: center;
+  padding: 2rem;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
 }
 
 .hero-content .script-text {
-  font-family: 'Times New Roman', Times, serif; /* Font script yang elegan */
-  font-style: italic;
-  font-size: 2.5rem;
-  color: var(--manado-gold);
-  display: block;
+  font-family: 'Times New Roman', Times, serif; /* Font script yang elegan */
+  font-style: italic;
+  font-size: 2.5rem;
+  color: var(--manado-gold);
+  display: block;
 }
 
 .hero-content h1 {
-  font-family: var(--font-heading);
-  font-weight: 900;
-  font-size: 5rem;
-  letter-spacing: 0.1em;
-  margin-top: -1rem;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 5rem;
+  letter-spacing: 0.1em;
+  margin-top: -1rem;
 }
 
 /* Intro Section */
 .intro-section span {
-  font-family: var(--font-heading);
-  color: var(--bs-primary);
-  font-weight: 900;
+  font-family: var(--font-heading);
+  color: var(--bs-primary);
+  font-weight: 900;
 }
 
 /* Brand Section (Meimo) */
 #brand .card {
-  border: none;
-  overflow: hidden; /* Agar gambar tidak keluar dari rounded card */
+  border: none;
+  overflow: hidden; /* Agar gambar tidak keluar dari rounded card */
 }
 
 /* Menu Gallery Section */
 #menu-gallery {
-  background-color: var(--manado-dark-bg);
-  /* Optional: Tambahkan pola batik/tenun Manado sebagai background-image */
-  /* background-image: url('/images/patterns/manado-pattern.png'); */
-  /* background-blend-mode: multiply; */
-  background-attachment: fixed;
-  background-size: cover;
-  padding: 6rem 0;
+  background-color: var(--manado-dark-bg);
+  /* Optional: Tambahkan pola batik/tenun Manado sebagai background-image */
+  /* background-image: url('/images/patterns/manado-pattern.png'); */
+  /* background-blend-mode: multiply; */
+  background-attachment: fixed;
+  background-size: cover;
+  padding: 6rem 0;
 }
 
 .menu-card {
-  transition: all 0.3s ease;
-  border: none;
+  transition: all 0.3s ease;
+  border: none;
 
-  /* Sudut membulat */
-  border-radius: 1.5rem; 
-  overflow: hidden;      
+  /* Sudut membulat */
+  border-radius: 1.5rem;
+  overflow: hidden;      
 }
 
 .menu-card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: scale(1.03);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .menu-card .card-title {
-  font-family: var(--font-heading);
-  color: var(--bs-primary);
+  font-family: var(--font-heading);
+  color: var(--bs-primary);
 }
 
 .menu-card .card-body {
-  background-color: #fff;
+  background-color: #fff;
 }
 
 
 /* Modal Styling */
 .modal-header {
-  background-color: var(--bs-primary);
-  color: white;
-  border-bottom: none;
+  background-color: var(--bs-primary);
+  color: white;
+  border-bottom: none;
 }
 .modal-header .btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%);
+  filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 .modal-body h4 {
-  color: var(--bs-primary);
-  border-bottom: 2px solid var(--manado-gold);
-  padding-bottom: 8px;
-  display: inline-block;
+  color: var(--bs-primary);
+  border-bottom: 2px solid var(--manado-gold);
+  padding-bottom: 8px;
+  display: inline-block;
 }
 
 /* Bintang Rating di Modal */
 .rating-stars span {
-  font-size: 2.5rem;
-  color: #ccc;
-  cursor: pointer;
-  transition: color 0.2s;
-  line-height: 1;
+  font-size: 2.5rem;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
 }
 
 .rating-stars span.active,
 .rating-stars span:hover {
-  color: var(--bs-warning);
+  color: var(--bs-warning);
 }
 
 /* Tombol Scroll-to-Top */
 .scroll-to-top {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1050;
-  opacity: 0;
-  transition: opacity 0.3s;
-  width: 50px;
-  height: 50px;
-  font-size: 1.5rem;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1050;
+  opacity: 0;
+  transition: opacity 0.3s;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
 }
 
 .scroll-to-top.show {
-  opacity: 1;
+  opacity: 1;
 }
 
 /* ==================================
-  BAGIAN YANG DIUBAH 
+  BAGIAN YANG DIUBAH
 ==================================
 */
 
 /* Footer */
 .footer {
-  /* Menggunakan variabel warna gelap dari root */
-  background-color: var(--manado-dark-bg, #2a2a2a); 
-  color: #f8f9fa; /* Teks terang */
-  padding: 4rem 0;
+  /* Menggunakan variabel warna gelap dari root */
+  background-color: var(--manado-dark-bg, #2a2a2a);
+  color: #f8f9fa; /* Teks terang */
+  padding: 4rem 0;
 }
 
 .footer h5 {
-  font-family: var(--font-heading);
-  color: var(--manado-gold);
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-family: var(--font-heading);
+  color: var(--manado-gold);
+  font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 .footer .footer-brand-title {
-  font-family: var(--font-heading);
-  font-weight: 900;
-  font-size: 2rem;
-  color: var(--manado-gold);
-  margin-bottom: 1rem;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 2rem;
+  color: var(--manado-gold);
+  margin-bottom: 1rem;
 }
 
 .footer p {
-  color: #f8f9fa; /* Pastikan paragraf juga terang */
-  line-height: 1.7;
+  color: #f8f9fa; /* Pastikan paragraf juga terang */
+  line-height: 1.7;
 }
 
 .footer a {
-  color: #f8f9fa;
-  text-decoration: none;
-  transition: color 0.2s;
+  color: #f8f9fa;
+  text-decoration: none;
+  transition: color 0.2s;
 }
 
 .footer a:hover {
-  color: var(--manado-gold);
+  color: var(--manado-gold);
 }
 
 /* Menyesuaikan warna teks copyright di footer gelap */
 .footer .text-muted {
-  color: #adb5bd !important; /* Bootstrap muted color for dark bg */
+  color: #adb5bd !important; /* Bootstrap muted color for dark bg */
 }
 
 
@@ -297,40 +307,40 @@ h1, h2, h3, h4, h5, h6 {
 */
 
 .horizontal-scroll-wrapper {
-  display: flex;
-  flex-wrap: nowrap; /* Mencegah item turun ke baris baru */
-  overflow-x: auto;  /* Mengaktifkan scroll horizontal */
-  padding: 1.5rem 0.5rem; 
-  padding-left: 1rem;
-  padding-right: 1rem;
+  display: flex;
+  flex-wrap: nowrap; /* Mencegah item turun ke baris baru */
+  overflow-x: auto;  /* Mengaktifkan scroll horizontal */
+  padding: 1.5rem 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 
-  /* Perbaikan agar kartu tidak meregang */
-  align-items: flex-start; 
+  /* Perbaikan agar kartu tidak meregang */
+  align-items: flex-start;
 
-  /* Menyembunyikan scrollbar visual */
-  -ms-overflow-style: none;  /* IE dan Edge */
-  scrollbar-width: none;  /* Firefox */
+  /* Menyembunyikan scrollbar visual */
+  -ms-overflow-style: none;  /* IE dan Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 /* Menyembunyikan scrollbar visual untuk Chrome, Safari, dan Opera */
 .horizontal-scroll-wrapper::-webkit-scrollbar {
-  display: none;
+  display: none;
 }
 
 /* Ini adalah item card di dalam wrapper */
 .scroll-card-item {
-  flex: 0 0 auto; /* Mencegah card penyet/melebar */
-  
-  /* ==================================
-    ✨ PERUBAHAN UKURAN DI SINI ✨
-    ==================================
-  */
-  width: 300px;   /* Diubah dari 320px menjadi 300px */
+  flex: 0 0 auto; /* Mencegah card penyet/melebar */
+ 
+  /* ==================================
+    ✨ PERUBAHAN UKURAN DI SINI ✨
+    ==================================
+  */
+  width: 300px;   /* Diubah dari 320px menjadi 300px */
 
-  margin-right: 1.5rem; /* Jarak antar card */
+  margin-right: 1.5rem; /* Jarak antar card */
 }
 
 /* Hapus margin kanan pada item terakhir */
 .scroll-card-item:last-child {
-  margin-right: 0;
+  margin-right: 0;
 }
