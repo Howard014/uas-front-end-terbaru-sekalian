@@ -12,7 +12,7 @@ interface MenuItem {
   cost: number;
   stock: number;
   description: string;
-  imgSrc: string; // Ini adalah link (URL) ke gambar
+  imgSrc: string;
   ratingStars: string;
   history: string;
   ingredients: string;
@@ -46,7 +46,6 @@ interface RawMenuItem {
   history?: string;
   ingredients?: string;
   tips?: string;
-  // Alternative property names
   nama?: string;
   kategori?: string;
   harga?: string | number;
@@ -61,7 +60,7 @@ interface RawMenuItem {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"menu" | "orders">("menu");
+  const [activeTab, setActiveTab] = useState<"menu" | "orders">("orders");
   const [menus, setMenus] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalProfit, setTotalProfit] = useState(0);
@@ -77,7 +76,7 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       const [menuRes, orderRes] = await Promise.all([
-        fetch("http://localhost:5000/api/menus"), // plural
+        fetch("http://localhost:5000/api/menus"),
         fetch("http://localhost:5000/api/orders"),
       ]);
 
@@ -87,7 +86,7 @@ export default function AdminDashboard() {
           _id: menu._id,
           name: menu.name || menu.nama,
           category: menu.category || menu.kategori,
-          price: menu.price != null ? parseFloat(menu.price.toString()) : menu.harga != null ? parseFloat(menu.harga.toString()) : (25000 + index * 5000), // Dummy price if not provided
+          price: menu.price != null ? parseFloat(menu.price.toString()) : menu.harga != null ? parseFloat(menu.harga.toString()) : (25000 + index * 5000),
           cost: menu.cost != null ? parseFloat(menu.cost.toString()) : menu.biaya != null ? parseFloat(menu.biaya.toString()) : 0,
           stock: menu.stock != null ? parseInt(menu.stock.toString()) : menu.stok != null ? parseInt(menu.stok.toString()) : 100,
           description: menu.description || menu.deskripsi,
@@ -102,12 +101,15 @@ export default function AdminDashboard() {
 
       if (orderRes.ok) {
         const orderData = await orderRes.json();
+        console.log("Orders fetched:", orderData);
         setOrders(orderData);
         const profit = orderData.reduce(
-          (sum: number, order: Order) => sum + order.profit,
+          (sum: number, order: Order) => sum + (isNaN(order.profit) ? 0 : order.profit),
           0
         );
         setTotalProfit(profit);
+      } else {
+        console.error("Failed to fetch orders:", orderRes.status);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -116,7 +118,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ fungsi buat order baru + kurangi stock + update profit otomatis
   const handleCreateOrder = async (menuId: string, qty: number) => {
     try {
       const menu = menus.find((m) => m._id === menuId);
@@ -151,8 +152,6 @@ export default function AdminDashboard() {
 
       if (!res.ok) throw new Error("Gagal membuat order");
 
-      // Kurangi stock
-      // ✅ KONFLIK DIPERBAIKI: Menggunakan /api/menus (plural) dan backtick (`)
       await fetch(`http://localhost:5000/api/menus/${menuId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -166,12 +165,9 @@ export default function AdminDashboard() {
     }
   };
 
-  // Save / Update menu
   const handleSaveMenu = async (menu: MenuItem) => {
     try {
       const method = menu._id ? "PUT" : "POST";
-      
-      // ✅ KONFLIK DIPERBAIKI: Menggunakan /api/menus (plural) dan backtick (`)
       const url = menu._id
         ? `http://localhost:5000/api/menus/${menu._id}`
         : "http://localhost:5000/api/menus";
@@ -192,12 +188,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Delete menu
   const handleDeleteMenu = async (id: string) => {
     if (!confirm("Are you sure you want to delete this menu item?")) return;
 
     try {
-      // ✅ KONFLIK DIPERBAIKI: Menggunakan /api/menus (plural) dan backtick (`)
       const res = await fetch(`http://localhost:5000/api/menus/${id}`, {
         method: "DELETE",
       });
@@ -207,10 +201,8 @@ export default function AdminDashboard() {
     }
   };
 
-  // Complete Order
   const handleCompleteOrder = async (orderId: string) => {
     try {
-      // ✅ KONFLIK DIPERBAIKI: Menambahkan backtick (`)
       const res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -248,13 +240,43 @@ export default function AdminDashboard() {
 
         {/* Stats Cards */}
         <div className="row mb-4">
-          {/* ... card stats ... */}
+          <div className="col-md-3">
+            <div className="card text-white bg-primary">
+              <div className="card-body">
+                <h5 className="card-title">Total Orders</h5>
+                <h3>{orders.length}</h3>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="card text-white bg-success">
+              <div className="card-body">
+                <h5 className="card-title">Total Profit</h5>
+                <h3>Rp {totalProfit.toLocaleString('id-ID')}</h3>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="card text-white bg-warning">
+              <div className="card-body">
+                <h5 className="card-title">Pending Orders</h5>
+                <h3>{orders.filter(o => o.status === 'pending').length}</h3>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="card text-white bg-info">
+              <div className="card-body">
+                <h5 className="card-title">Menu Items</h5>
+                <h3>{menus.length}</h3>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
         <ul className="nav nav-tabs mb-4">
           <li className="nav-item">
-            {/* ✅ PERBAIKAN SINTAKS: className dinamis menggunakan backtick (`) */}
             <button
               className={`nav-link ${activeTab === "menu" ? "active" : ""}`}
               onClick={() => setActiveTab("menu")}
@@ -263,7 +285,6 @@ export default function AdminDashboard() {
             </button>
           </li>
           <li className="nav-item">
-            {/* ✅ PERBAIKAN SINTAKS: className dinamis menggunakan backtick (`) */}
             <button
               className={`nav-link ${activeTab === "orders" ? "active" : ""}`}
               onClick={() => setActiveTab("orders")}
@@ -368,7 +389,52 @@ export default function AdminDashboard() {
         {/* Orders Tab */}
         {activeTab === "orders" && (
           <div>
-            {/* ... tabel order ... */}
+            <h3>Order Management</h3>
+            <div className="table-responsive">
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order._id}>
+                      <td>{order._id}</td>
+                      <td>
+                        {order.items.map((item, index) => (
+                          <div key={index}>
+                            {item.name} (x{item.qty}) - Rp {item.price.toLocaleString('id-ID')}
+                          </div>
+                        ))}
+                      </td>
+                      <td>Rp {order.total.toLocaleString('id-ID')}</td>
+                      <td>
+                        <span className={`badge ${order.status === 'pending' ? 'bg-warning' : 'bg-success'}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td>{new Date(order.createdAt).toLocaleString('id-ID')}</td>
+                      <td>
+                        {order.status === 'pending' && (
+                          <button
+                            className="btn btn-sm btn-success"
+                            onClick={() => handleCompleteOrder(order._id)}
+                          >
+                            Complete
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -478,13 +544,14 @@ export default function AdminDashboard() {
 
                       {editingMenu.imgSrc && (
                         <div className="col-12 mb-3 text-center">
-                          {/* ... preview gambar ... */}
+                          <img
+                            src={editingMenu.imgSrc}
+                            alt="Preview"
+                            style={{ maxWidth: "200px", maxHeight: "200px" }}
+                          />
                         </div>
                       )}
 
-                      {/* ✅ HASIL MERGE (dari branch 'aldo') */}
-                      {/* Data lain yang ada di interface */}
-                      
                       <div className="col-12 mb-3">
                         <label className="form-label">Rating (Contoh: ★★★★☆)</label>
                         <input
@@ -492,11 +559,11 @@ export default function AdminDashboard() {
                           className="form-control"
                           value={editingMenu.ratingStars}
                           onChange={(e) =>
-                            setEditingMenu({ ... editingMenu, ratingStars: e.target.value })
+                            setEditingMenu({ ...editingMenu, ratingStars: e.target.value })
                           }
                         />
                       </div>
-                      
+
                       <div className="col-12 mb-3">
                         <label className="form-label">History</label>
                         <textarea

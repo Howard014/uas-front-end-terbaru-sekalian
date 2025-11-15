@@ -182,7 +182,19 @@ async function start() {
       if (bgCount === 0) {
         console.log("Seeding backgrounds...");
         await Background.insertMany([
-          // ... data background Anda ...
+          {
+            nama: "Manado Background 1",
+            url: "/images/background/manado1.jpg",
+          },
+          {
+            nama: "Manado Background 2",
+            url: "/images/background/manado2.jpg",
+          },
+                    {
+            nama: "Manado Background 3",
+            url: "/images/background/manado2.jpg",
+          },
+
         ]);
       }
 
@@ -190,7 +202,71 @@ async function start() {
       if (menuCount === 0) {
         console.log("Seeding menus...");
         await Menu.insertMany([
-          // ... data menu Anda ...
+          {
+            name: "Tinutuan",
+            category: "Sarapan",
+            price: 45000,
+            cost: 20000,
+            stock: 10,
+            description: "Bubur daging khas Manado yang gurih dengan kuah yang kaya. Dibuat dari beras yang dimasak lama hingga lembut bersama daging sapi.",
+            imgSrc: "https://res.cloudinary.com/dgoxc9dmz/image/upload/v1763041886/babikecap_fn3l80.jpg",
+            ratingStars: "★★★★☆",
+            history: "Tinutuan adalah hidangan sarapan tradisional dari Manado yang telah menjadi bagian dari identitas kuliner kota ini sejak berabad-abad lalu.",
+            ingredients: "Beras, daging sapi, santan, telur, bumbu tradisional",
+            tips: "Sajikan dengan sambal tomat dan telur rebus untuk hasil maksimal.",
+          },
+          {
+            name: "Cakalang Fufu",
+            category: "Utama",
+            price: 85000,
+            cost: 40000,
+            stock: 30,
+            description: "Daging babi asap yang empuk dengan tekstur lunak di dalam dan crispy di luar. Bumbu khas Manado membuat rasanya tak tertahankan.",
+            imgSrc: "https://images.unsplash.com/photo-1555939594-58d7cb561ada?w=400&h=300&fit=crop",
+            ratingStars: "★★★★★",
+            history: "Cakalang fufu adalah pengembangan modern dari cakalang asap tradisional Manado yang dipopulerkan di era 1980-an.",
+            ingredients: "Daging babi, bumbu rempah, garam, kunyit, jahe",
+            tips: "Nikmati hangat-hangat dengan nasi putih atau sambal.",
+          },
+          {
+            name: "Woku Manado",
+            category: "Utama",
+            price: 65000,
+            cost: 30000,
+            stock: 40,
+            description: "Tumisan khas Manado dengan bumbu rempah yang kaya dan aroma yang menggugah selera. Dapat menggunakan berbagai jenis daging atau ikan.",
+            imgSrc: "https://images.unsplash.com/photo-1626082927389-6cd097cdc46e?w=400&h=300&fit=crop",
+            ratingStars: "★★★★☆",
+            history: "Woku adalah teknik memasak asli Manado yang sudah ada sejak zaman pra-kolonial. Nama 'woku' berasal dari alat tradisional penggerus bumbu.",
+            ingredients: "Daging/Ikan, bawang merah, bawang putih, cabe rawit, kunyit, jahe, kelapa",
+            tips: "Gunakan wajan besar dan api tinggi untuk hasil yang sempurna.",
+          },
+          {
+            name: "Ikan Bakar Manado",
+            category: "Utama",
+            price: 75000,
+            cost: 35000,
+            stock: 35,
+            description: "Ikan segar yang dipanggang dengan bumbu rempah khas Manado. Dagingnya juicy dan warna gosongnya sempurna.",
+            imgSrc: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop",
+            ratingStars: "★★★★☆",
+            history: "Ikan bakar telah menjadi makanan pokok masyarakat Manado karena lokasi geografisnya yang dekat dengan laut.",
+            ingredients: "Ikan snapper, bumbu rempah, minyak kelapa, jeruk limau",
+            tips: "Pilih ikan yang masih segar untuk hasil terbaik.",
+          },
+          {
+            name: "Tinutuan Manado Special",
+            category: "Sarapan",
+            price: 95000,
+            cost: 50000,
+            stock: 20,
+            description: "Versi premium tinutuan dengan tambahan seafood pilihan seperti udang dan kepiting.",
+            imgSrc: "https://images.unsplash.com/photo-1612528443702-f6741f271a04?w=400&h=300&fit=crop",
+            ratingStars: "★★★★★",
+            history: "Inovasi dari tinutuan tradisional yang dikembangkan untuk memenuhi selera pelanggan modern.",
+            ingredients: "Beras, udang, kepiting, santan, telur, bumbu pilihan",
+            tips: "Pastikan seafood dalam kondisi segar untuk rasa yang optimal.",
+          },
         ]);
       }
     } catch (err) {
