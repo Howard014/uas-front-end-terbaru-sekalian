@@ -192,15 +192,23 @@ export default function Home() {
       >
         <div className="container-fluid">
           <div className="d-flex align-items-center ms-auto gap-2">
-            <a
-              href="https://wa.me/6281234567890?text=Halo%2C%20saya%20ingin%20memesan%20dari%20Meimo."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-warning fw-bold px-4 py-2"
-              style={{ borderRadius: "25px" }}
+            <button
+              onClick={() => router.push("/order")}
+              className="btn btn-warning fw-bold px-4 py-2 transition-all"
+              style={{ borderRadius: "25px", cursor: "pointer" }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLButtonElement;
+                el.style.transform = "scale(1.05)";
+                el.style.boxShadow = "0 4px 12px rgba(255, 193, 7, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLButtonElement;
+                el.style.transform = "scale(1)";
+                el.style.boxShadow = "none";
+              }}
             >
-               Dine In / Pesan
-            </a>
+              🛒 Dine In / Pesan
+            </button>
           </div>
         </div>
       </nav>

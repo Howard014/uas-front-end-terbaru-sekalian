@@ -166,10 +166,15 @@ export default function OrderPage() {
 
       // Ganti alert dengan konfirmasi console
       console.log("Pesanan Anda berhasil dibuat! (Status: Menunggu Pembayaran)");
-      
+
       // 4. Kosongkan keranjang & tutup modal
       setCartItems([]);
       setShowCartModal(false);
+
+      // 5. Navigasi ke halaman lihat pesanan (misalnya /orders atau halaman khusus)
+      // Jika belum ada halaman lihat pesanan, bisa buat route baru atau tampilkan modal sukses
+      // Untuk sementara, kita bisa redirect ke home atau tampilkan pesan
+      alert("Pesanan berhasil! Silakan tunggu konfirmasi dari restoran.");
 
     } catch (error) {
       console.error("Error saat konfirmasi pesanan:", error);
