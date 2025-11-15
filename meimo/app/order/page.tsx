@@ -1,106 +1,64 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // 1. TIPE DATA
 interface MenuItem {
-  id: number;
+  _id?: string;
+  id?: number;
   name: string;
   description: string;
   price: number;
+  cost: number;
   image: string;
-  category: "Makanan Utama" | "Camilan" | "Minuman" | "Penutup";
+  category: string;
 }
 interface CartItem extends MenuItem {
   qty: number;
 }
 
-// 2. DATA MENU (Data lokal jika backend gagal)
-const menuData: MenuItem[] = [
-  {
-    id: 1,
-    name: "Babi Kecap",
-    description: "Irisan daging babi dimasak dengan kecap khas Manado, gurih dan manis.",
-    price: 45000,
-    image: "/images/menu/babikecap.jpg", 
-    category: "Makanan Utama",
-  },
-  {
-    id: 2,
-    name: "Babi Panggang",
-    description: "Daging babi panggang dengan bumbu rempah khas dan kulit renyah.",
-    price: 50000,
-    image: "/images/menu/babipanggang.jpg",
-    category: "Makanan Utama",
-  },
-   {
-    id: 3,
-    name: "Tinoransak",
-    description: "Daging babi dimasak dalam bambu dengan bumbu pedas khas.",
-    price: 55000,
-    image: "/images/menu/tinorangsak.jpg",
-    category: "Makanan Utama",
-  },
-  {
-    id: 4,
-    name: "Cakalang Suwir",
-    description: "Ikan cakalang asap suwir dimasak rica-rica pedas.",
-    price: 35000,
-    image: "/images/menu/cakalangsuir.jpg",
-    category: "Makanan Utama",
-  },
-  {
-    id: 5,
-    name: "Kangkung Bunga Pepaya",
-    description: "Tumis sayur khas dengan cita rasa sedikit pahit namun nikmat.",
-    price: 20000,
-    image: "/images/menu/kangkungpepaya.jpg",
-    category: "Makanan Utama",
-  },
-  {
-    id: 6,
-    name: "Goroho Manado",
-    description: "Pisang goroho goreng tipis disajikan dengan sambal roa.",
-    price: 18000,
-    image: "/images/menu/gorohomanado.jpg",
-    category: "Camilan",
-  },
-  {
-    id: 7,
-    name: "Perkedel Jagung",
-    description: "Bakwan jagung renyah dan manis khas Manado.",
-    price: 12000,
-    image: "/images/menu/perkedeljagung.jpg",
-    category: "Camilan",
-  },
-  {
-    id: 8,
-    name: "Es Brenebon",
-    description: "Es kacang merah manis dengan susu coklat.",
-    price: 25000,
-    image: "/images/menu/gorohomanado.jpg", // Placeholder
-    category: "Penutup",
-  },
-  {
-    id: 9,
-    name: "Es Jeruk Manado",
-    description: "Es jeruk peras segar khas.",
-    price: 15000,
-    image: "/images/menu/perkedeljagung.jpg", // Placeholder
-    category: "Minuman",
-  },
-];
-
 // 3. KOMPONEN UTAMA
 export default function OrderPage() {
+  const [menuData, setMenuData] = useState<MenuItem[]>([]);
+  const [loadingMenus, setLoadingMenus] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("Semua");
   const [searchQuery, setSearchQuery] = useState("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCartModal, setShowCartModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // State loading
+
+  // Fetch menu data dari backend
+  useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/menus");
+        if (!response.ok) {
+          throw new Error("Failed to fetch menus");
+        }
+        const data = await response.json();
+        // Map data to match frontend interface
+        const mappedData = data.map((item: unknown) => ({
+          id: item._id,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          cost: item.cost,
+          image: item.imgSrc,
+          category: item.category === "Utama" ? "Makanan Utama" : item.category === "Sarapan" ? "Sarapan" : item.category,
+        }));
+        setMenuData(mappedData);
+      } catch (error) {
+        console.error("Error fetching menus:", error);
+      } finally {
+        setLoadingMenus(false);
+      }
+    };
+
+    fetchMenus();
+  }, []);
 
   // Hitung Total
   const totalItems = cartItems.reduce((acc, item) => acc + item.qty, 0);
@@ -128,8 +86,9 @@ export default function OrderPage() {
   };
 
   // Kurangi dari Keranjang
-  const handleDecreaseQty = (id: number) => {
-    setCartItems((prev) => 
+  const handleDecreaseQty = (id: number | undefined) => {
+    if (id === undefined) return;
+    setCartItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           return { ...item, qty: item.qty - 1 };
@@ -152,14 +111,19 @@ export default function OrderPage() {
     setIsLoading(true); // Mulai loading
 
     try {
+      // Hitung profit total
+      const totalProfit = cartItems.reduce((acc, item) => acc + ((item.price - item.cost) * item.qty), 0);
+
       // 1. Siapkan data untuk dikirim
       const orderData = {
         items: cartItems.map(item => ({
           name: item.name,
           price: item.price,
+          cost: item.cost,
           qty: item.qty,
         })),
         total: totalPrice,
+        profit: totalProfit,
         status: "pending" // Status awal
       };
 
@@ -182,10 +146,15 @@ export default function OrderPage() {
 
       // Ganti alert dengan konfirmasi console
       console.log("Pesanan Anda berhasil dibuat! (Status: Menunggu Pembayaran)");
-      
+
       // 4. Kosongkan keranjang & tutup modal
       setCartItems([]);
       setShowCartModal(false);
+
+      // 5. Navigasi ke halaman lihat pesanan (misalnya /orders atau halaman khusus)
+      // Jika belum ada halaman lihat pesanan, bisa buat route baru atau tampilkan modal sukses
+      // Untuk sementara, kita bisa redirect ke home atau tampilkan pesan
+      alert("Pesanan berhasil! Silakan tunggu konfirmasi dari restoran.");
 
     } catch (error) {
       console.error("Error saat konfirmasi pesanan:", error);
